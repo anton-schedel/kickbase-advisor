@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Matchday Desk</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #faf7f0; --ink: #1d2733; --muted: #6b7480; --line: #e3ded2;
+  --green: #1d7a3e; --red: #c02f1d; --card: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14181d; --ink: #e8e4da; --muted: #8b92a0; --line: #2a313a;
+    --green: #4cc472; --red: #e8604f; --card: #1b2129;
+  }
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 16px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
+  max-width: 680px; margin: 0 auto; padding: 20px 16px 60px;
+}
+h1, h2, .hero-num { font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase; letter-spacing: .04em; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px;
+  flex-wrap: wrap; border-bottom: 3px solid var(--ink); padding-bottom: 10px; }
+h1 { font-size: 1.25rem; font-weight: 600; }
+.stamp { color: var(--muted); font-size: .78rem; white-space: nowrap; }
+.hero { display: flex; gap: 28px; padding: 22px 0 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.hero div { min-width: 130px; }
+.hero .label { font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.hero-num { font-size: clamp(1.7rem, 9vw, 2.4rem); font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.hero-num.down { color: var(--red); }
+.hero-num.up { color: var(--green); }
+.deadline { font-size: .82rem; color: var(--red); margin-top: 2px; }
+h2 { font-size: .95rem; font-weight: 600; margin: 30px 0 10px; padding-left: 10px; border-left: 4px solid var(--ink); }
+.advice { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; font-size: .93rem; }
+.advice .tablewrap { overflow-x: auto; }
+.advice h1, .advice h2, .advice h3 { font-size: .95rem; margin: 14px 0 6px; padding: 0; border: 0; }
+.advice p, .advice li { margin-bottom: 8px; }
+.advice ul, .advice ol { padding-left: 20px; }
+.advice table { border-collapse: collapse; font-size: .85rem; margin: 8px 0; }
+.advice th, .advice td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+.tablewrap { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; font-size: .88rem; }
+table.data td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.name { font-weight: 600; }
+td.name .sub { display: block; font-weight: 400; font-size: .74rem; color: var(--muted); }
+td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.num.up { color: var(--green); }
+td.num.down { color: var(--red); }
+td.status { text-align: right; font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+.status.in { color: var(--green); font-weight: 700; }
+.status.bench { color: var(--muted); }
+.status.out { color: var(--red); font-weight: 700; }
+footer { margin-top: 40px; font-size: .74rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>KICKBASE Königsklasse 26/27</h1>
+  <span class="stamp">updated 24.08.2026 11:50</span>
+</header>
+
+<section class="hero">
+  <div>
+    <div class="label">Budget</div>
+    <div class="hero-num down">-29,47 M€</div>
+    <div class='deadline'>must be ≥ 0 by kickoff — sell!</div>
+  </div>
+  <div>
+    <div class="label">Team value</div>
+    <div class="hero-num">180,91 M€</div>
+  </div>
+</section>
+
+<h2>Advice</h2>
+<div class="advice"><p>No skill applies here — this is pure analysis of the briefing you provided, so here's the advisory.</p>
+<p><strong>One data flag up front:</strong> every manager in the league has 0 points, so the season hasn't started — all Pts/ØPts figures are last-season numbers. That means Baum's Ø6 and Simpson-Pusey's Ø61 reflect limited minutes last year, not current form; their surging values + predicted-starter status are the real signal. Also, Chuki's reference stats are from La Liga 2024/25 — too stale to act on.</p>
+<h2>1. Budget fix: sell El Mala, Mohya, and Burcu</h2>
+<ul>
+<li><strong>El Mala (25.77M)</strong> — the core sale. Worst points-per-value of your expensive players (Ø71 at ~26M vs Uzun's Ø106 at 28M), and his value momentum has clearly cooled: +288k/7d is the weakest trend in your squad despite +2.8M/30d. You're selling near the top of his curve. The alternative one-sale fix, Guirassy (29.60M), is strictly worse: Ø102, still rising +752k/7d, and BVB hosts newly promoted HSV.</li>
+<li><strong>Mohya (10.96M)</strong> and <strong>Burcu (8.75M)</strong> — your two weakest scorers (Ø34, Ø28). Their value trends are still hot, which hurts, but selling them is what turns a bare budget fix into a war chest. Only your lineup's 9–10 best players score anyway.</li>
+</ul>
+<p>Math: −29.47 + 25.77 + 10.96 + 8.75 = <strong>+16.01M</strong> before buys, <strong>+0.98M</strong> after the buys below. Non-negative before Friday's kickoff. ✓</p>
+<h2>2. Sell / Hold — rest of the squad</h2>
+<div class='tablewrap'><table>
+<thead>
+<tr>
+<th>Player</th>
+<th>Verdict</th>
+<th>Reasoning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anton</td>
+<td><strong>Hold</strong></td>
+<td>Ø126, your best asset, BVB home vs HSV. Untouchable.</td>
+</tr>
+<tr>
+<td>Guirassy</td>
+<td><strong>Hold</strong></td>
+<td>Ø102, +752k/7d, elite fixture. Core scorer.</td>
+</tr>
+<tr>
+<td>Uzun</td>
+<td><strong>Hold</strong></td>
+<td>Ø106 at similar price to El Mala with better trend (+651k/7d). Keep the better half of that pair.</td>
+</tr>
+<tr>
+<td>Grifo</td>
+<td><strong>Hold</strong></td>
+<td>Ø71 at only 12.76M and +904k/7d — great value-to-points ratio, home vs Bremen.</td>
+</tr>
+<tr>
+<td>Simpson-Pusey</td>
+<td><strong>Hold</strong></td>
+<td>New Köln starter, +1078k/7d, cheap. Classic value-growth engine.</td>
+</tr>
+<tr>
+<td>Baum</td>
+<td><strong>Hold</strong></td>
+<td>Ø6 is a last-season artifact (barely played). Predicted starter with the hottest 30d trend in your squad (+6.7M). Ride the rise; reassess if he scores nothing in 2–3 matchdays.</td>
+</tr>
+<tr>
+<td>Pejcinovic</td>
+<td><strong>Hold</strong></td>
+<td>+2823k/7d is your steepest riser and he's a predicted starter. Away at Bayern is rough for points this week, but selling now kills the growth.</td>
+</tr>
+<tr>
+<td>Philipp</td>
+<td><strong>Hold (reluctantly)</strong></td>
+<td>Worth 0.5M and scores 0 (not in Hoffenheim's XI) — selling gains you nothing. He's a placeholder; GK is your biggest structural hole, fix it next (see below).</td>
+</tr>
+</tbody>
+</table></div>
+<h2>3. Buy targets (both Kickbase-listed = instant at asking price, no bidding war)</h2>
+<ol>
+<li><strong>Fernández (MID, Leverkusen, 7.57M)</strong> — hottest 7-day trend on the entire market (+2506k), predicted starter, and Leverkusen visits newly promoted Elversberg, the softest fixture of the matchday. Cheap points plus steep value growth.</li>
+<li><strong>Schmetgens (DEF, Bremen, 7.46M)</strong> — new Bremen starter, +1824k/7d, +6.96M/30d. Same profile as your Simpson-Pusey/Baum bets: cheap predicted starter the market is aggressively repricing.</li>
+</ol>
+<p>Total 15.03M, leaving <strong>+0.98M</strong> budget.</p>
+<p><strong>Next-week target, not now:</strong> <strong>Noll (GK, Paderborn, 12.68M)</strong> — Ø105 as a 2.Liga keeper, now a Bundesliga starter, rising +582k/7d. You can't afford him and the two buys above, and the two midfield/defense buys bring far more value growth. With your squad's momentum (~+8–10M/week across your risers), you should be able to buy a real GK within 1–2 matchdays. He's listed by AlexG, so expect to bid slightly above 12.68M. Heuer Fernandes (14.37M, Ø92) is the pricier alternative. Skip <strong>Džeko</strong> despite the wild +9.8M/30d — he's not in Schalke's predicted XI and manager-listed, a bid-war trap. Skip <strong>Mokwa</strong> — starter, but value is falling (−547k/7d) and he faces Leverkusen.</p>
+<h2>4. Starting XI — 4-3-2 (10 men, one attacking slot empty)</h2>
+<ul>
+<li><strong>GK:</strong> Philipp <em>(scores ~0 — accepted cost this week; this is the slot Noll fixes next)</em></li>
+<li><strong>DEF:</strong> Anton — Simpson-Pusey — Baum — Schmetgens</li>
+<li><strong>MID:</strong> Uzun — Grifo — Fernández</li>
+<li><strong>FWD:</strong> Guirassy — Pejcinovic</li>
+</ul>
+<p>That's 9 real scoring starters, all in their clubs' predicted XIs, with the market's four hottest value trends (Pejcinovic, Fernández, Schmetgens, Baum) all in your squad compounding team value toward the GK upgrade and a 11th–12th player next week.</p></div>
+
+<h2>Squad</h2>
+<div class="tablewrap"><table class="data">
+<tr><td class='name'>Anton<span class='sub'>DEF · Borussia Dortmund</span></td><td class='num'>34,04 M€</td><td class='num up'>+310k</td><td class='num'>126</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Guirassy<span class='sub'>FWD · Borussia Dortmund</span></td><td class='num'>29,60 M€</td><td class='num up'>+752k</td><td class='num'>102</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Uzun<span class='sub'>MID · Eintracht Frankfurt</span></td><td class='num'>28,19 M€</td><td class='num up'>+651k</td><td class='num'>106</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>El Mala<span class='sub'>MID · 1. FC Köln</span></td><td class='num'>25,77 M€</td><td class='num up'>+288k</td><td class='num'>71</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Grifo<span class='sub'>MID · SC Freiburg</span></td><td class='num'>12,76 M€</td><td class='num up'>+904k</td><td class='num'>71</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Simpson-Pusey<span class='sub'>DEF · 1. FC Köln</span></td><td class='num'>12,27 M€</td><td class='num up'>+1.078k</td><td class='num'>61</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Baum<span class='sub'>DEF · Eintracht Frankfurt</span></td><td class='num'>11,08 M€</td><td class='num up'>+1.324k</td><td class='num'>6</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Mohya<span class='sub'>MID · Borussia Mönchengladbach</span></td><td class='num'>10,96 M€</td><td class='num up'>+874k</td><td class='num'>34</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Burcu<span class='sub'>MID · 1. FC Union Berlin</span></td><td class='num'>8,75 M€</td><td class='num up'>+1.256k</td><td class='num'>28</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Pejcinovic<span class='sub'>FWD · VfB Stuttgart</span></td><td class='num'>6,99 M€</td><td class='num up'>+2.823k</td><td class='num'>46</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Philipp<span class='sub'>GK · TSG Hoffenheim</span></td><td class='num'>0,50 M€</td><td class='num '>+0k</td><td class='num'>–</td><td class='status bench'>Bank</td></tr>
+</table></div>
+
+<h2>Market — top opportunities</h2>
+<div class="tablewrap"><table class="data">
+<tr><td class='name'>Fernández<span class='sub'>MID · Bayer 04 Leverkusen · Kickbase</span></td><td class='num'>7,57 M€</td><td class='num up'>+2.506k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Schmetgens<span class='sub'>DEF · SV Werder Bremen · Kickbase</span></td><td class='num'>7,46 M€</td><td class='num up'>+1.824k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Darvich<span class='sub'>MID · SV 07 Elversberg · Captain Luca</span></td><td class='num'>6,22 M€</td><td class='num up'>+1.511k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Gadou<span class='sub'>DEF · Borussia Dortmund · AlexG</span></td><td class='num'>24,59 M€</td><td class='num up'>+1.174k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Seiwald<span class='sub'>MID · RB Leipzig · Dan the Man</span></td><td class='num'>17,17 M€</td><td class='num up'>+1.104k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Burger<span class='sub'>MID · TSG Hoffenheim · Kickbase</span></td><td class='num'>23,94 M€</td><td class='num up'>+1.085k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Sander<span class='sub'>MID · Borussia Mönchengladbach · Kickbase</span></td><td class='num'>12,63 M€</td><td class='num up'>+1.080k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Heuer Fernandes<span class='sub'>GK · Hamburger SV · Captain Luca</span></td><td class='num'>14,37 M€</td><td class='num up'>+977k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Stage<span class='sub'>MID · SV Werder Bremen · Dan the Man</span></td><td class='num'>19,42 M€</td><td class='num up'>+719k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Neuer<span class='sub'>GK · FC Bayern München · Kickbase</span></td><td class='num'>13,47 M€</td><td class='num up'>+711k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Noll<span class='sub'>GK · SC Paderborn 07 · AlexG</span></td><td class='num'>12,68 M€</td><td class='num up'>+582k</td><td class='status in'>XI</td></tr>
+<tr><td class='name'>Ryerson<span class='sub'>DEF · Borussia Dortmund · Kickbase</span></td><td class='num'>25,98 M€</td><td class='num up'>+399k</td><td class='status in'>XI</td></tr>
+</table></div>
+
+<footer>Data: Kickbase API + ligainsider.de · advice by Claude · not financial advice, just football</footer>
+</body>
+</html>

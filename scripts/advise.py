@@ -76,6 +76,11 @@ def main() -> None:
     print(advice)
     print(f"\nAdvice saved: {advice_path.relative_to(project_root)}")
 
+    from build_site import render_latest
+
+    site_path = render_latest(project_root)
+    print(f"Site rendered: {site_path.relative_to(project_root)} — push to update GitHub Pages")
+
 
 if __name__ == "__main__":
     main()
