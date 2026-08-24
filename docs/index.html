@@ -79,14 +79,24 @@ td.rank { width: 1.8rem; color: var(--muted); font-variant-numeric: tabular-nums
 .prow { display: flex; justify-content: space-evenly; gap: 4px; position: relative; z-index: 1; }
 .pp { text-align: center; width: 4.6rem; }
 .shirt {
-  width: 2.5rem; height: 2.5rem; margin: 0 auto 3px; border-radius: 50%;
+  width: 2.9rem; height: 2.9rem; margin: 0 auto 4px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-family: "Oswald", sans-serif; font-weight: 600; font-size: .95rem;
-  color: #10241a; background: #f2f0e6; border: 2px solid rgba(0,0,0,.25);
+  color: #10241a; background: #f2f0e6; border: 2px solid rgba(255,255,255,.7);
+  font-variant-numeric: tabular-nums; position: relative;
+}
+.shirt.gk { background: #ffd166; border-color: #ffd166; }
+.shirt.empty { background: #b23b2c; color: #fff; }
+.face { width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+  object-position: top center; background: #f2f0e6; }
+.face.blank { background: #d8d5c6; }
+.badge {
+  position: absolute; bottom: -5px; right: -6px; min-width: 1.5rem; padding: 0 3px;
+  height: 1.05rem; border-radius: .55rem; background: #10241a; color: #fff;
+  border: 1.5px solid rgba(255,255,255,.85);
+  font-family: "Oswald", sans-serif; font-size: .68rem; line-height: 1.05rem;
   font-variant-numeric: tabular-nums;
 }
-.shirt.gk { background: #ffd166; }
-.shirt.empty { background: #b23b2c; color: #fff; }
 .pn { color: #fff; font-size: .74rem; font-weight: 600; line-height: 1.15;
   overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 .po { color: rgba(255,255,255,.75); font-size: .62rem; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
@@ -126,7 +136,7 @@ footer { margin-top: 40px; font-size: .74rem; color: var(--muted); }
 <h2>Best XI — matchday 1</h2>
 <p class="note">Best legal lineup from the 11 players you own right now — transfers are suggested separately under Advice.
 Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</strong> = away match.</p>
-<div class='pitch'><div class='prow'><div class='pp'><div class='shirt fwd'>110</div><div class='pn'>Guirassy</div><div class='pr'>49–150</div><div class='po'>vs HSV</div></div><div class='pp'><div class='shirt fwd'>65</div><div class='pn'>Pejcinovic</div><div class='pr'>24–78</div><div class='po'>at FCB</div></div></div><div class='prow'><div class='pp'><div class='shirt mid'>117</div><div class='pn'>Uzun</div><div class='pr'>43–176</div><div class='po'>at FCU</div></div><div class='pp'><div class='shirt mid'>104</div><div class='pn'>Grifo</div><div class='pr'>41–166</div><div class='po'>vs SVW</div></div><div class='pp'><div class='shirt mid'>89</div><div class='pn'>El Mala</div><div class='pr'>16–122</div><div class='po'>vs TSG</div></div><div class='pp'><div class='shirt mid'>75</div><div class='pn'>Burcu</div><div class='pr'>35–100</div><div class='po'>vs SGE</div></div><div class='pp'><div class='shirt mid'>63*</div><div class='pn'>Mohya</div><div class='pr'>18–65</div><div class='po'>at RBL</div></div></div><div class='prow'><div class='pp'><div class='shirt def'>112</div><div class='pn'>Anton</div><div class='pr'>89–151</div><div class='po'>vs HSV</div></div><div class='pp'><div class='shirt def'>71</div><div class='pn'>Simpson-Pusey</div><div class='pr'>57–82</div><div class='po'>vs TSG</div></div><div class='pp'><div class='shirt def'>70</div><div class='pn'>Baum</div><div class='pr'>38–95</div><div class='po'>at FCU</div></div></div><div class='prow'><div class='pp'><div class='shirt gk'>19*</div><div class='pn'>Philipp</div><div class='po'>at KOE</div></div></div></div><div class='pitchfoot'><span>3-5-2</span><span><strong>894</strong> projected points</span></div>
+<div class='pitch'><div class='prow'><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/d5ca76d467ce40e1b9012c9f28f77855.png' alt='' loading='lazy'><span class='badge'>110</span></div><div class='pn'>Guirassy</div><div class='pr'>49–150</div><div class='po'>vs HSV</div></div><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/47214559d4384efab358f0688fc666de.png' alt='' loading='lazy'><span class='badge'>65</span></div><div class='pn'>Pejcinovic</div><div class='pr'>24–78</div><div class='po'>at FCB</div></div></div><div class='prow'><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/22edbaccec3048b49f80a4433d588cbd.png' alt='' loading='lazy'><span class='badge'>117</span></div><div class='pn'>Uzun</div><div class='pr'>43–176</div><div class='po'>at FCU</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/7d6a4935195d414a9119e81aa398222a.png' alt='' loading='lazy'><span class='badge'>104</span></div><div class='pn'>Grifo</div><div class='pr'>41–166</div><div class='po'>vs SVW</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/f477c9023dc54f6eabbf06e5ad7bd0ba.png' alt='' loading='lazy'><span class='badge'>89</span></div><div class='pn'>El Mala</div><div class='pr'>16–122</div><div class='po'>vs TSG</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/1d225120f5ea44769c6ddea4877c270d.png' alt='' loading='lazy'><span class='badge'>75</span></div><div class='pn'>Burcu</div><div class='pr'>35–100</div><div class='po'>vs SGE</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/d4b8e5025d3043b3ad48c1f6ac91830d.png' alt='' loading='lazy'><span class='badge'>63*</span></div><div class='pn'>Mohya</div><div class='pr'>18–65</div><div class='po'>at RBL</div></div></div><div class='prow'><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/d5ca76d467ce40e1b9012c9f28f77855.png' alt='' loading='lazy'><span class='badge'>112</span></div><div class='pn'>Anton</div><div class='pr'>89–151</div><div class='po'>vs HSV</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/f477c9023dc54f6eabbf06e5ad7bd0ba.png' alt='' loading='lazy'><span class='badge'>71</span></div><div class='pn'>Simpson-Pusey</div><div class='pr'>57–82</div><div class='po'>vs TSG</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/22edbaccec3048b49f80a4433d588cbd.png' alt='' loading='lazy'><span class='badge'>70</span></div><div class='pn'>Baum</div><div class='pr'>38–95</div><div class='po'>at FCU</div></div></div><div class='prow'><div class='pp'><div class='shirt gk'><img class='face' src='https://kickbase.b-cdn.net/content/file/1fe930ae579e4ba78fe7c4f948264d3b.png' alt='' loading='lazy'><span class='badge'>19*</span></div><div class='pn'>Philipp</div><div class='po'>at KOE</div></div></div></div><div class='pitchfoot'><span>3-5-2</span><span><strong>894</strong> projected points</span></div>
 
 <h2>League projection</h2>
 <p class="note">Every manager's current squad, run through the same model at its best legal formation.</p>

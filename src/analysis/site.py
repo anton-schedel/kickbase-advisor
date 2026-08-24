@@ -6,6 +6,9 @@ from datetime import datetime
 import markdown
 
 
+PLAYER_CDN = "https://kickbase.b-cdn.net/"
+
+
 def eur_m(value) -> str:
     if value is None:
         return "–"
@@ -77,9 +80,17 @@ def _pitch(xi: dict | None) -> str:
             spread = ""
             if prediction.get("low") is not None:
                 spread = f"<div class='pr'>{prediction['low']:.0f}–{prediction['high']:.0f}</div>"
+            # Player photos come from Kickbase's public CDN — no account needed.
+            photo = p.get("pim")
+            face = (
+                f"<img class='face' src='{PLAYER_CDN}{html.escape(photo)}' alt='' loading='lazy'>"
+                if photo
+                else "<div class='face blank'></div>"
+            )
             cells.append(
                 "<div class='pp'>"
-                f"<div class='shirt {line_name.lower()}'>{pred:.0f}{'*' if thin else ''}</div>"
+                f"<div class='shirt {line_name.lower()}'>{face}"
+                f"<span class='badge'>{pred:.0f}{'*' if thin else ''}</span></div>"
                 f"<div class='pn'>{html.escape(p.get('n') or '')}</div>"
                 f"{spread}"
                 f"<div class='po'>{html.escape(opponent)}</div>"
@@ -295,14 +306,24 @@ td.rank {{ width: 1.8rem; color: var(--muted); font-variant-numeric: tabular-num
 .prow {{ display: flex; justify-content: space-evenly; gap: 4px; position: relative; z-index: 1; }}
 .pp {{ text-align: center; width: 4.6rem; }}
 .shirt {{
-  width: 2.5rem; height: 2.5rem; margin: 0 auto 3px; border-radius: 50%;
+  width: 2.9rem; height: 2.9rem; margin: 0 auto 4px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-family: "Oswald", sans-serif; font-weight: 600; font-size: .95rem;
-  color: #10241a; background: #f2f0e6; border: 2px solid rgba(0,0,0,.25);
+  color: #10241a; background: #f2f0e6; border: 2px solid rgba(255,255,255,.7);
+  font-variant-numeric: tabular-nums; position: relative;
+}}
+.shirt.gk {{ background: #ffd166; border-color: #ffd166; }}
+.shirt.empty {{ background: #b23b2c; color: #fff; }}
+.face {{ width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+  object-position: top center; background: #f2f0e6; }}
+.face.blank {{ background: #d8d5c6; }}
+.badge {{
+  position: absolute; bottom: -5px; right: -6px; min-width: 1.5rem; padding: 0 3px;
+  height: 1.05rem; border-radius: .55rem; background: #10241a; color: #fff;
+  border: 1.5px solid rgba(255,255,255,.85);
+  font-family: "Oswald", sans-serif; font-size: .68rem; line-height: 1.05rem;
   font-variant-numeric: tabular-nums;
 }}
-.shirt.gk {{ background: #ffd166; }}
-.shirt.empty {{ background: #b23b2c; color: #fff; }}
 .pn {{ color: #fff; font-size: .74rem; font-weight: 600; line-height: 1.15;
   overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0,0,0,.5); }}
 .po {{ color: rgba(255,255,255,.75); font-size: .62rem; text-shadow: 0 1px 2px rgba(0,0,0,.5); }}
