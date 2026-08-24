@@ -54,7 +54,8 @@ def _pitch(xi: dict | None) -> str:
     if not xi:
         return "<p class='muted'>No lineup available.</p>"
 
-    line_order = ["GK", "DEF", "MID", "FWD"]
+    # Attacking upward, as pre-match graphics are drawn: keeper at the bottom.
+    line_order = ["FWD", "MID", "DEF", "GK"]
     rows = []
     for line_name in line_order:
         players = xi["lines"].get(line_name) or []
@@ -86,7 +87,8 @@ def _pitch(xi: dict | None) -> str:
             "<div class='pn'>empty</div><div class='po'>penalty</div></div>"
             for _ in range(empty)
         )
-        rows.append(f"<div class='prow'>{cells}</div>")
+        # Shown at the attacking end, above the outfield lines.
+        rows.insert(0, f"<div class='prow'>{cells}</div>")
 
     return (
         f"<div class='pitch'>{''.join(rows)}</div>"
@@ -278,6 +280,7 @@ td.rank {{ width: 1.8rem; color: var(--muted); font-variant-numeric: tabular-num
 .pitchfoot {{ display: flex; justify-content: space-between; font-size: .8rem;
   color: var(--muted); margin-top: 6px; }}
 .muted {{ color: var(--muted); }}
+.note {{ color: var(--muted); font-size: .78rem; margin: -4px 0 8px; }}
 td.status {{ text-align: right; font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }}
 .status.in {{ color: var(--green); font-weight: 700; }}
 .status.bench {{ color: var(--muted); }}
@@ -305,9 +308,11 @@ footer {{ margin-top: 40px; font-size: .74rem; color: var(--muted); }}
 </section>
 
 <h2>Best XI — matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
+<p class="note">Best legal lineup from the {len(squad)} players you own right now. Transfers are suggested separately under Advice.</p>
 {_pitch(data.get("my_xi"))}
 
 <h2>League projection</h2>
+<p class="note">Every manager's current squad, run through the same model at its best legal formation.</p>
 <div class="tablewrap"><table class="data">
 {_rival_rows(data.get("rivals") or [])}
 </table></div>
