@@ -119,6 +119,14 @@ earlier full-season form is the better guide. Equally, a big average earned in t
 Bundesliga does not transfer one-for-one to the Bundesliga (the model already discounts it, \
 but say so when it drives a recommendation). Call out explicitly when the headline average \
 misleads.
+- **Play the league, not the spreadsheet.** The briefing projects every rival's best possible \
+XI, because their full squads are visible. What matters is beating THEM, not maximising in \
+the abstract. If I am comfortably ahead, prefer safe, low-variance picks and protect the \
+lead. If I am behind, favour differentials and higher-variance players — copying the \
+leader's profile guarantees I stay behind him. Name the specific rival I am chasing or \
+holding off, and the points gap. Also use rival squads to see which strong players are \
+locked up (they only become available if that manager lists them or accepts a direct \
+offer), and which managers are thin at a position or carrying empty slots.
 - **Value per point**: when comparing buys, weigh predicted points against price. A cheap \
 player predicted at 60 can be better business than a 25M player predicted at 90, especially \
 while the budget is tight — but only if he is actually in the XI.

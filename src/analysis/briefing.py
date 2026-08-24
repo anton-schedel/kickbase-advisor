@@ -137,6 +137,72 @@ def _market_table(market: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _league_projection(data: dict) -> str:
+    rivals = data.get("rivals") or []
+    if not rivals:
+        return "_No rival data._"
+    lines = [
+        "| # | Manager | Projected pts | Best XI | Squad | Team value | Notes |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for rank, r in enumerate(rivals, 1):
+        xi = r.get("xi") or {}
+        notes = []
+        if xi.get("empty_slots"):
+            notes.append(f"**{xi['empty_slots']} empty slot(s) = {xi['empty_slots'] * -100} pts**")
+        if r["is_me"]:
+            notes.append("← you")
+        lines.append(
+            f"| {rank} | {r['name']} | **{r['projected_points']:.0f}** | {xi.get('formation', '?')} "
+            f"| {r['squad_size']} | {eur(r['team_value'])} | {', '.join(notes)} |"
+        )
+    return "\n".join(lines)
+
+
+def _rival_holdings(data: dict) -> str:
+    """Who owns the strongest players — the pool that is not on the market."""
+    rows = []
+    for r in data.get("rivals") or []:
+        if r["is_me"]:
+            continue
+        for p in r["players"]:
+            pred = (p.get("prediction") or {}).get("points")
+            if pred is not None:
+                rows.append((pred, p, r["name"]))
+    rows.sort(key=lambda x: -x[0])
+    if not rows:
+        return "_No rival holdings._"
+    lines = [
+        "| Player | Pos | Predicted | Value | Owner |",
+        "|---|---|---|---|---|",
+    ]
+    for pred, p, owner in rows[:15]:
+        lines.append(
+            f"| {p.get('n')} | {p.get('position')} | **{pred:.0f}** | {eur(p.get('mv'))} | {owner} |"
+        )
+    return "\n".join(lines)
+
+
+def _my_xi(data: dict) -> str:
+    xi = data.get("my_xi")
+    if not xi:
+        return "_No lineup computed._"
+    lines = [f"Best legal XI from my current squad: **{xi['formation']}**, "
+             f"projected **{xi['total']:.0f}** points"]
+    if xi.get("empty_slots"):
+        lines.append(f"⚠ {xi['empty_slots']} slot(s) cannot be filled — that is {xi['empty_slots'] * -100} points.")
+    lines.append("")
+    for line_name in ("GK", "DEF", "MID", "FWD"):
+        players = xi["lines"].get(line_name) or []
+        if not players:
+            continue
+        names = ", ".join(
+            f"{p['n']} ({(p.get('prediction') or {}).get('points', 0):.0f})" for p in players
+        )
+        lines.append(f"- **{line_name}**: {names}")
+    return "\n".join(lines)
+
+
 def _standings(ranking: dict) -> str:
     rows = ranking.get("us", [])
     lines = []
@@ -196,8 +262,25 @@ def build_briefing(data: dict, now: datetime | None = None) -> str:
 - Squad size: {len(squad)} players, {n_starters} confirmed in their club's predicted starting XI{f", {n_unknown} with no lineup published yet (unknown, not benched)" if n_unknown else ""}
 - Max players per user: {data['budget'].get('mppu', 15)}
 
-## League standings
+## League standings (season points)
 {_standings(data['ranking'])}
+
+## Matchday projection — every manager's best possible XI
+Each rival's full squad is visible, so the same prediction model is run over
+all of them. This is what the coming matchday looks like if everyone fields
+their strongest legal lineup. Managers with fewer than 11 players are charged
+−100 per empty slot.
+
+{_league_projection(data)}
+
+## My best legal XI right now
+{_my_xi(data)}
+
+## Strongest players owned by rivals (not buyable on the market)
+These are locked up unless the owner lists them or accepts a direct offer.
+Useful for knowing which rivals are strong where, and who to approach.
+
+{_rival_holdings(data)}
 
 ## My squad
 (Sorted by predicted points. Δ = market value change. Status from ligainsider.de: injury flags and whether the player is in his club's predicted starting XI. Season history, Fixture and Predicted pts are explained under "Scoring & prediction model" below.)

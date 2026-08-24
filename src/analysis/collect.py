@@ -9,6 +9,7 @@ from ligainsider.scraper import LigainsiderScraper
 from analysis.matching import map_teams, match_player
 from analysis.odds import match_outlook, expected_base_points, neutral_base_points
 from analysis.prediction import player_profile, predict, position_priors
+from analysis.lineup import best_xi
 
 BUNDESLIGA_COMPETITION_ID = "1"
 
@@ -106,6 +107,14 @@ def _next_matchday_outlooks(client, progress) -> tuple[dict, dict]:
     return by_team, {"day": upcoming["day"]}
 
 
+def _normalize_rival_player(player: dict) -> dict:
+    """Rival squads use pi/pn where our own squad uses i/n."""
+    normalized = dict(player)
+    normalized["i"] = player.get("pi") or player.get("i")
+    normalized["n"] = player.get("pn") or player.get("n")
+    return normalized
+
+
 def collect(progress=print) -> dict:
     client = KickbaseClient(os.environ["KICKBASE_EMAIL"], os.environ["KICKBASE_PASSWORD"])
     client.login()
@@ -134,16 +143,46 @@ def collect(progress=print) -> dict:
     kb_teams = client.get(f"/v4/competitions/{BUNDESLIGA_COMPETITION_ID}/table")["it"]
     progress(f"Kickbase: squad {len(squad)}, market {len(market)}")
 
+    # Every rival's full squad is visible, which lets us project the whole
+    # league's matchday, not just our own team.
+    my_user_id = (client.user or {}).get("id")
+    rivals = []
+    for entry in ranking.get("us", []):
+        rival_squad = client.get(f"/v4/leagues/{league_id}/managers/{entry['i']}/squad")
+        players = [_normalize_rival_player(p) for p in rival_squad.get("it", [])]
+        rivals.append(
+            {
+                "user_id": entry["i"],
+                "name": entry.get("n"),
+                "is_me": entry["i"] == my_user_id,
+                "players": players,
+            }
+        )
+    progress(f"Kickbase: {len(rivals)} managers, {sum(len(r['players']) for r in rivals)} owned players")
+
     progress("Kickbase: fetching market value histories and performance...")
+    performance_cache: dict[str, dict] = {}
+
+    def performance(player_id: str) -> dict:
+        if player_id not in performance_cache:
+            performance_cache[player_id] = client.player_performance(league_id, player_id)
+        return performance_cache[player_id]
+
     for player in squad + market:
         player["position"] = POSITIONS.get(player.get("pos"), "?")
         # Only timeframe=365 returns data; shorter windows come back empty.
         history = client.player_market_value(league_id, player["i"], timeframe=365)
         player["mv_changes"] = _mv_changes(history)
-        perf = client.player_performance(league_id, player["i"])
+        perf = performance(player["i"])
         player["stats"] = _season_stats(perf)
         player["history"] = _history(perf)
         player["profile"] = player_profile(perf, player["position"])
+
+    progress("Kickbase: profiling rival squads...")
+    for rival in rivals:
+        for player in rival["players"]:
+            player["position"] = POSITIONS.get(player.get("pos"), "?")
+            player["profile"] = player_profile(performance(player["i"]), player["position"])
 
     scraper = LigainsiderScraper()
     li_teams = scraper.bundesliga_teams()
@@ -173,7 +212,10 @@ def collect(progress=print) -> dict:
     outlooks, matchday_info = _next_matchday_outlooks(client, progress)
     unmapped_fixtures = set()
 
-    for player in squad + market:
+    rival_players = [p for r in rivals if not r["is_me"] for p in r["players"]]
+    all_players = squad + market + rival_players
+
+    for player in all_players:
         outlook = outlooks.get(player["tid"])
         if outlook:
             player["fixture"] = outlook
@@ -205,11 +247,11 @@ def collect(progress=print) -> dict:
     # Predictions need the fixture, the profile and the lineup signal together.
     # Baselines come from the league's own well-sampled players, so a thin
     # record gets pulled toward what that position normally produces.
-    priors = position_priors([(p["position"], p.get("profile")) for p in squad + market])
+    priors = position_priors([(p["position"], p.get("profile")) for p in all_players])
     progress("Baseline pts/90 per position: " + ", ".join(f"{k} {v:.0f}" for k, v in sorted(priors.items())))
 
     predicted = 0
-    for player in squad + market:
+    for player in all_players:
         player["prediction"] = predict(
             player.get("profile"),
             player.get("fixture"),
@@ -219,7 +261,19 @@ def collect(progress=print) -> dict:
             prior=priors.get(player["position"]),
         )
         predicted += 1 if player["prediction"] else 0
-    progress(f"Predictions: {predicted}/{len(squad) + len(market)} players")
+    progress(f"Predictions: {predicted}/{len(all_players)} players")
+
+    # Project the whole league: each manager's best legal XI for this matchday.
+    for rival in rivals:
+        players = squad if rival["is_me"] else rival["players"]
+        xi = best_xi(players)
+        rival["xi"] = xi
+        rival["projected_points"] = xi["total"]
+        rival["team_value"] = sum(p.get("mv") or 0 for p in players)
+        rival["squad_size"] = len(players)
+    rivals.sort(key=lambda r: -r["projected_points"])
+    my_rank = next((i for i, r in enumerate(rivals, 1) if r["is_me"]), None)
+    progress(f"League projection: you rank {my_rank}/{len(rivals)} for this matchday")
 
     return {
         "league": league,
@@ -231,4 +285,6 @@ def collect(progress=print) -> dict:
         "lineups": lineups,
         "recent_transfers": transfers,
         "matchday": matchday_info,
+        "rivals": rivals,
+        "my_xi": next((r["xi"] for r in rivals if r["is_me"]), None),
     }
