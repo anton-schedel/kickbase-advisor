@@ -108,35 +108,56 @@ def _decompose(match: dict, position: str) -> dict | None:
     }
 
 
-def player_profile(performance: dict, position: str) -> dict | None:
-    """Per-90 scoring ability and start rate, from the last seasons played."""
-    seasons = [s for s in performance.get("it", []) if any(m.get("p") is not None for m in s.get("ph", []))]
-    if not seasons:
+def match_records(performance: dict) -> list[dict]:
+    """Every scored match in chronological order, with its season context."""
+    records = []
+    for season in performance.get("it", []):
+        for match in season.get("ph", []):
+            if match.get("p") is None:
+                continue
+            records.append(
+                {
+                    "match": match,
+                    "season": season.get("ti"),
+                    "competition": season.get("n") or "",
+                    "date": match.get("md") or "",
+                }
+            )
+    records.sort(key=lambda r: r["date"])
+    return records
+
+
+def profile_from_records(records: list[dict], position: str) -> dict | None:
+    """Build a profile from a chronological slice — used live and in backtests.
+
+    Taking a prefix of the records gives exactly what was knowable before a
+    given match, which is what walk-forward evaluation requires.
+    """
+    if not records:
         return None
+    seasons_present = list(dict.fromkeys(r["season"] for r in records))
+    recent = seasons_present[-len(SEASON_WEIGHTS) :]
+    weight_of = {season: SEASON_WEIGHTS[i] for i, season in enumerate(reversed(recent))}
 
     weighted_residual = weighted_minutes = 0.0
     per90_samples: list[float] = []
     starts = appearances = scheduled = 0
-    sources: list[str] = []
 
-    for offset, season in enumerate(reversed(seasons[-len(SEASON_WEIGHTS) :])):
-        weight = SEASON_WEIGHTS[offset]
-        competition = season.get("n") or ""
-        level = SECOND_DIVISION_FACTOR if "2." in competition else 1.0
-        sources.append(f"{season.get('ti')} {competition}")
-        for match in season.get("ph", []):
-            if match.get("p") is None:
-                continue
-            scheduled += 1
-            decomposed = _decompose(match, position)
-            if not decomposed:
-                continue
-            appearances += 1
-            starts += 1 if decomposed["started"] else 0
-            weighted_residual += decomposed["residual"] * weight * level
-            weighted_minutes += decomposed["minutes"] * weight
-            if decomposed["minutes"] >= 60:
-                per90_samples.append(decomposed["residual"] * level * 90 / decomposed["minutes"])
+    for record in records:
+        weight = weight_of.get(record["season"])
+        if weight is None:
+            continue
+        scheduled += 1
+        decomposed = _decompose(record["match"], position)
+        if not decomposed:
+            continue
+        level = SECOND_DIVISION_FACTOR if "2." in record["competition"] else 1.0
+        appearances += 1
+        starts += 1 if decomposed["started"] else 0
+        weighted_residual += decomposed["residual"] * weight * level
+        weighted_minutes += decomposed["minutes"] * weight
+        if decomposed["minutes"] >= 60:
+            per90_samples.append(decomposed["residual"] * level * 90 / decomposed["minutes"])
 
     if weighted_minutes <= 0:
         return None
@@ -147,9 +168,14 @@ def player_profile(performance: dict, position: str) -> dict | None:
         "start_rate": starts / scheduled if scheduled else 0.0,
         "play_rate": appearances / scheduled if scheduled else 0.0,
         "matches": appearances,
-        "sources": sources,
+        "sources": recent,
         "spread": _spread(per90_samples),
     }
+
+
+def player_profile(performance: dict, position: str) -> dict | None:
+    """Per-90 scoring ability and start rate, from the last seasons played."""
+    return profile_from_records(match_records(performance), position)
 
 
 def position_priors(profiles: list[tuple[str, dict | None]]) -> dict[str, float]:

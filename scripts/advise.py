@@ -109,7 +109,12 @@ from his match history) projected onto this specific fixture's win and clean-she
 probabilities and his expected minutes. Use it directly to pick the XI, to compare a buy \
 target against the player he would replace, and to judge whether a sale is expensive in \
 points. The bracket is his realistic range — a wide range means a volatile player, a narrow \
-one means a dependable floor. Prefer the prediction over raw ØPts, since ØPts ignores who \
+one means a dependable floor. **Calibration, measured over 9,199 past matches:** a single \
+match prediction carries a typical error of about 50 points, because one football match is \
+inherently noisy (actual scores have a standard deviation of 70). So treat predictions as a \
+RANKING tool, not a forecast: a 20-point gap between two players is not meaningful for one \
+matchday, while a 60-point gap is. Never justify a decision on a small predicted difference \
+alone — bring in price, value trend, minutes security and fixture as well. Prefer the prediction over raw ØPts, since ØPts ignores who \
 the opponent is. Rows marked ⚠ have no published lineup, so their minutes are guessed from \
 history — treat those predictions as provisional.
 - **Read the season history column, not just one average.** It shows starts/appearances and \
@@ -152,6 +157,41 @@ rejected with its total, so the margin is visible.
 Be concrete and decisive. Flag any data that looks unreliable instead of guessing."""
 
 
+def archive_predictions(project_root: Path, stamp: str, data: dict) -> None:
+    """Save this run's forecasts so they can be scored once the matchday is played.
+
+    The backtest could not measure the odds-driven half of the model; this is
+    how that gets settled, with real results.
+    """
+    matchday = (data.get("matchday") or {}).get("day")
+    if matchday is None:
+        return
+    rows = []
+    for player in data["squad"] + data["market"]:
+        prediction = player.get("prediction")
+        if not prediction or prediction.get("note") == "injured/suspended":
+            continue
+        seasons = player.get("history") or []
+        rows.append(
+            {
+                "player_id": player["i"],
+                "name": player["n"],
+                "position": player["position"],
+                "predicted": round(prediction["points"], 1),
+                # The baseline the backtest showed is hard to beat.
+                "naive": seasons[-1]["avg"] if seasons else None,
+                "predicted_starter": player.get("predicted_starter"),
+                "p_win": (player.get("fixture") or {}).get("p_win"),
+            }
+        )
+    archive_dir = project_root / "data" / "predictions"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    (archive_dir / f"{stamp}_md{matchday}.json").write_text(
+        json.dumps({"matchday": matchday, "generated": stamp, "predictions": rows}, ensure_ascii=False)
+    )
+    print(f"Archived {len(rows)} predictions for matchday {matchday}")
+
+
 def main() -> None:
     project_root = Path(__file__).resolve().parents[1]
     load_dotenv(project_root / ".env")
@@ -162,6 +202,7 @@ def main() -> None:
 
     data = collect()
     (out_dir / f"{stamp}_data.json").write_text(json.dumps(data, indent=1, ensure_ascii=False))
+    archive_predictions(project_root, stamp, data)
     briefing = build_briefing(data)
     briefing_path = out_dir / f"{stamp}_briefing.md"
     briefing_path.write_text(briefing)

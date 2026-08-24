@@ -72,11 +72,16 @@ def _pitch(xi: dict | None) -> str:
                 if fixture
                 else ""
             )
-            thin = (p.get("prediction") or {}).get("confidence") == "low"
+            prediction = p.get("prediction") or {}
+            thin = prediction.get("confidence") == "low"
+            spread = ""
+            if prediction.get("low") is not None:
+                spread = f"<div class='pr'>{prediction['low']:.0f}–{prediction['high']:.0f}</div>"
             cells.append(
                 "<div class='pp'>"
                 f"<div class='shirt {line_name.lower()}'>{pred:.0f}{'*' if thin else ''}</div>"
                 f"<div class='pn'>{html.escape(p.get('n') or '')}</div>"
+                f"{spread}"
                 f"<div class='po'>{html.escape(opponent)}</div>"
                 "</div>"
             )
@@ -157,6 +162,28 @@ def _market_rows(market: list[dict], limit: int = 12) -> str:
             + "</tr>"
         )
     return "\n".join(rows)
+
+
+def _deadline_block(data: dict, generated_at: datetime) -> str:
+    """Countdown to the first kickoff — the moment the budget must be >= 0."""
+    kickoffs = [
+        p["fixture"]["kickoff"]
+        for p in data.get("squad", [])
+        if (p.get("fixture") or {}).get("kickoff")
+    ]
+    if not kickoffs:
+        return ""
+    first = min(kickoffs)
+    kickoff = datetime.fromisoformat(first.replace("Z", "+00:00")).replace(tzinfo=None)
+    hours = (kickoff - generated_at).total_seconds() / 3600
+    if hours < 0:
+        return ""
+    when = f"{hours / 24:.1f} days" if hours >= 48 else f"{hours:.0f} hours"
+    return (
+        "<div><div class='label'>Budget deadline</div>"
+        f"<div class='hero-num'>{when}</div>"
+        f"<div class='deadline muted'>{kickoff.strftime('%a %d.%m. %H:%M')} first kickoff</div></div>"
+    )
 
 
 def build_site(data: dict, advice_md: str, generated_at: datetime) -> str:
@@ -279,6 +306,8 @@ td.rank {{ width: 1.8rem; color: var(--muted); font-variant-numeric: tabular-num
 .pn {{ color: #fff; font-size: .74rem; font-weight: 600; line-height: 1.15;
   overflow-wrap: anywhere; text-shadow: 0 1px 2px rgba(0,0,0,.5); }}
 .po {{ color: rgba(255,255,255,.75); font-size: .62rem; text-shadow: 0 1px 2px rgba(0,0,0,.5); }}
+.pr {{ color: rgba(255,255,255,.6); font-size: .58rem; font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0,0,0,.5); }}
 .pitchfoot {{ display: flex; justify-content: space-between; font-size: .8rem;
   color: var(--muted); margin-top: 6px; }}
 .muted {{ color: var(--muted); }}
@@ -307,6 +336,7 @@ footer {{ margin-top: 40px; font-size: .74rem; color: var(--muted); }}
     <div class="hero-num">{eur_m(team_value)}</div>
   </div>
   {rank_block}
+  {_deadline_block(data, generated_at)}
 </section>
 
 <h2>Best XI — matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
@@ -334,7 +364,10 @@ Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</stro
 </table></div>
 
 <footer>Predicted points = player's own per-90 scoring rate projected onto this fixture's
-win and clean-sheet odds. <strong>*</strong> marks thin data pulled toward the positional baseline.<br>
+win and clean-sheet odds; the smaller range is his typical spread.
+<strong>*</strong> marks thin data pulled toward the positional baseline.
+Backtested over 9,199 past matches: single-match predictions carry a typical error of ~50 points,
+so use them to <em>rank</em> players, not as forecasts.<br>
 Data: Kickbase API + ligainsider.de · advice by Claude · not financial advice, just football</footer>
 </body>
 </html>
