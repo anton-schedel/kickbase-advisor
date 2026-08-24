@@ -65,8 +65,10 @@ def _pitch(xi: dict | None) -> str:
         for p in players:
             pred = (p.get("prediction") or {}).get("points")
             fixture = p.get("fixture") or {}
+            # "vs" for a home match, "at" for an away one — two words rather
+            # than a word and a symbol, so the pair reads consistently.
             opponent = (
-                f"{'vs' if fixture.get('home') else '@'} {fixture.get('opponent')}"
+                f"{'vs' if fixture.get('home') else 'at'} {fixture.get('opponent')}"
                 if fixture
                 else ""
             )
@@ -308,7 +310,8 @@ footer {{ margin-top: 40px; font-size: .74rem; color: var(--muted); }}
 </section>
 
 <h2>Best XI — matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
-<p class="note">Best legal lineup from the {len(squad)} players you own right now. Transfers are suggested separately under Advice.</p>
+<p class="note">Best legal lineup from the {len(squad)} players you own right now — transfers are suggested separately under Advice.
+Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</strong> = away match.</p>
 {_pitch(data.get("my_xi"))}
 
 <h2>League projection</h2>

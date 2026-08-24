@@ -32,8 +32,8 @@ def _fixture_cell(p: dict) -> str:
     f = p.get("fixture")
     if not f:
         return "–"
-    where = "H" if f.get("home") else "A"
-    return f"{where} vs {f.get('opponent')} ({f['p_win']*100:.0f}% win, {f['p_clean_sheet']*100:.0f}% CS)"
+    where = "home vs" if f.get("home") else "away at"
+    return f"{where} {f.get('opponent')} ({f['p_win']*100:.0f}% win, {f['p_clean_sheet']*100:.0f}% CS)"
 
 
 def _xpts_cell(p: dict) -> str:
