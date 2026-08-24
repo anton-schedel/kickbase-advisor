@@ -220,23 +220,31 @@ def main() -> None:
         print(briefing)
         return
 
-    print("Asking Claude for advice (this can take a minute)...\n")
-    result = subprocess.run(
-        ["claude", "-p", ADVISOR_PROMPT],
-        input=briefing,
-        capture_output=True,
-        text=True,
-        timeout=600,
-    )
-    if result.returncode != 0:
-        sys.exit(f"claude CLI failed: {result.stderr[:500]}")
+    print("Asking Claude for advice (this usually takes a few minutes)...\n")
+    advice = None
+    try:
+        result = subprocess.run(
+            ["claude", "-p", ADVISOR_PROMPT],
+            input=briefing,
+            capture_output=True,
+            text=True,
+            timeout=1800,
+        )
+        if result.returncode == 0:
+            advice = result.stdout.strip()
+        else:
+            print(f"claude CLI failed: {result.stderr[:300]}")
+    except subprocess.TimeoutExpired:
+        print("claude CLI timed out — keeping the previous advice.")
 
-    advice = result.stdout.strip()
-    advice_path = out_dir / f"{stamp}_advice.md"
-    advice_path.write_text(advice)
-    print(advice)
-    print(f"\nAdvice saved: {advice_path.relative_to(project_root)}")
+    if advice:
+        advice_path = out_dir / f"{stamp}_advice.md"
+        advice_path.write_text(advice)
+        print(advice)
+        print(f"\nAdvice saved: {advice_path.relative_to(project_root)}")
 
+    # The dashboard is rebuilt either way: fresh data is useful on its own, and
+    # a slow advice step must not leave the site stale.
     from build_site import render_latest
 
     site_path = render_latest(project_root)

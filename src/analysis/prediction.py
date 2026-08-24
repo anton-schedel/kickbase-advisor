@@ -338,10 +338,17 @@ def predict(
     spread = profile.get("spread")
     if spread and p_start > 0.5:
         # Same structure as the prediction — fixture and goal parts held fixed,
-        # the player's own 20th/80th percentile action output varying — so the
-        # range always brackets the prediction.
+        # the player's own 20th/80th percentile action output varying. The
+        # percentiles are measured on his raw rate, so shift them by the same
+        # amount shrinkage moved the estimate, keeping the spread centred on
+        # the rate actually used.
         floor = result["fixture_part"] + goal_points
         scale = expected_minutes / 90
-        result["low"] = floor + spread[0] * scale
-        result["high"] = floor + spread[1] * scale
+        offset = rate - profile["residual_per90_raw"]
+        result["low"] = floor + (spread[0] + offset) * scale
+        result["high"] = floor + (spread[1] + offset) * scale
+        # A skewed history can still leave the estimate outside its own
+        # percentiles; the range must always contain the prediction.
+        result["low"] = min(result["low"], total)
+        result["high"] = max(result["high"], total)
     return result

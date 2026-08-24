@@ -9,6 +9,8 @@ import time
 
 import requests
 from bs4 import BeautifulSoup
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 BASE_URL = "https://www.ligainsider.de"
 USER_AGENT = (
@@ -24,6 +26,17 @@ TEAM_HREF = re.compile(r"^/[a-z0-9-]+/\d+/$")
 class LigainsiderScraper:
     def __init__(self):
         self._session = requests.Session()
+        self._session.mount(
+            "https://",
+            HTTPAdapter(
+                max_retries=Retry(
+                    total=3,
+                    backoff_factor=2,
+                    status_forcelist=(429, 500, 502, 503, 504),
+                    raise_on_status=False,
+                )
+            ),
+        )
         self._session.headers["User-Agent"] = USER_AGENT
         self._last_request_at = 0.0
 

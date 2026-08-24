@@ -6,11 +6,22 @@ Community docs: https://github.com/kevinskyba/kickbase-api-doc
 import time
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 BASE_URL = "https://api.kickbase.com"
 
 # Delay between requests so we behave like a normal app user, not a crawler.
 REQUEST_DELAY_SECONDS = 0.5
+# A full run makes several hundred requests, so an occasional dropped
+# connection is normal and must not abort the pipeline.
+RETRY = Retry(
+    total=4,
+    backoff_factor=1.5,
+    status_forcelist=(429, 500, 502, 503, 504),
+    allowed_methods=frozenset(["GET", "POST"]),
+    raise_on_status=False,
+)
 
 
 class KickbaseError(Exception):
@@ -22,6 +33,7 @@ class KickbaseClient:
         self._email = email
         self._password = password
         self._session = requests.Session()
+        self._session.mount("https://", HTTPAdapter(max_retries=RETRY))
         self._session.headers.update(
             {
                 "Content-Type": "application/json",
