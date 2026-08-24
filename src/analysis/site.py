@@ -30,7 +30,10 @@ def _status_cell(p: dict) -> str:
         inj = p["injury"]
         label = inj.get("status") or "verletzt"
         return f"<td class='status out' title='{html.escape(inj.get('news') or '')}'>✚ {html.escape(label)}</td>"
-    if p.get("predicted_starter"):
+    starter = p.get("predicted_starter")
+    if starter is None:
+        return "<td class='status bench' title='Ligainsider has not published this lineup yet'>?</td>"
+    if starter:
         return "<td class='status in'>XI</td>"
     return "<td class='status bench'>Bank</td>"
 

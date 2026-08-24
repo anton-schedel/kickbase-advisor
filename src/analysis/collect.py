@@ -2,9 +2,12 @@
 
 import os
 
+from datetime import datetime, timezone
+
 from kickbase.client import KickbaseClient
 from ligainsider.scraper import LigainsiderScraper
 from analysis.matching import map_teams, match_player
+from analysis.odds import match_outlook, expected_base_points, neutral_base_points
 
 BUNDESLIGA_COMPETITION_ID = "1"
 
@@ -40,6 +43,44 @@ def _season_stats(performance: dict) -> dict:
                 "matches_with_points": len(played),
             }
     return out
+
+
+def _next_matchday_outlooks(client, progress) -> tuple[dict, dict]:
+    """Per-team fixture outlook for the next matchday, derived from odds."""
+    matchdays = client.get(f"/v4/competitions/{BUNDESLIGA_COMPETITION_ID}/matchdays")["it"]
+    now = datetime.now(timezone.utc)
+    upcoming = None
+    for day in matchdays:
+        matches = day.get("it", [])
+        if any(datetime.fromisoformat(m["dt"].replace("Z", "+00:00")) > now for m in matches):
+            upcoming = day
+            break
+    if not upcoming:
+        progress("WARNING: no upcoming matchday found")
+        return {}, {}
+
+    by_team, missing = {}, []
+    for m in upcoming["it"]:
+        odds = m.get("bo")
+        kickoff = m["dt"]
+        if not odds:
+            missing.append(f"{m.get('t1sy')}-{m.get('t2sy')}")
+            continue
+        outlook = match_outlook(odds["o1"], odds["ox"], odds["o2"])
+        for side, tid, opponent in (
+            ("home", m["t1"], m.get("t2sy")),
+            ("away", m["t2"], m.get("t1sy")),
+        ):
+            by_team[tid] = {
+                **outlook[side],
+                "opponent": opponent,
+                "home": side == "home",
+                "kickoff": kickoff,
+            }
+    if missing:
+        progress(f"NOTE: no odds yet for {', '.join(missing)}")
+    progress(f"Odds: matchday {upcoming['day']}, outlook for {len(by_team)} teams")
+    return by_team, {"day": upcoming["day"]}
 
 
 def collect(progress=print) -> dict:
@@ -91,23 +132,39 @@ def collect(progress=print) -> dict:
             lineups.append(lineup)
     progress(f"Ligainsider: lineups for {len(lineups)} teams")
 
-    team_map = map_teams(kb_teams, [{"name": l["team"]} for l in lineups])
+    # Map from the full team list, not from lineups — Ligainsider sometimes has
+    # no predicted XI for a team yet, and that must not break the team mapping.
+    team_map = map_teams(kb_teams, li_teams)
     unmapped = {p["tid"] for p in squad + market} - set(team_map)
     if unmapped:
         progress(f"WARNING: no Ligainsider mapping for Kickbase team ids {sorted(unmapped)}")
 
     lineup_by_team = {l["team"]: l for l in lineups}
+    teams_with_lineup = set(lineup_by_team)
     injuries_by_team: dict[str, list] = {}
     for row in injuries:
         injuries_by_team.setdefault(row["team"], []).append(row)
 
+    outlooks, matchday_info = _next_matchday_outlooks(client, progress)
+    unmapped_fixtures = set()
+
     for player in squad + market:
         player["position"] = POSITIONS.get(player.get("pos"), "?")
+        outlook = outlooks.get(player["tid"])
+        if outlook:
+            player["fixture"] = outlook
+            player["x_base_points"] = expected_base_points(player["position"], outlook)
+            player["x_base_points_neutral"] = neutral_base_points(player["position"])
+        else:
+            unmapped_fixtures.add(player["tid"])
         li_team = team_map.get(player["tid"])
         player["li_team"] = li_team
         lineup = lineup_by_team.get(li_team, {})
-        starter = match_player(player["n"], lineup.get("players", []))
-        player["predicted_starter"] = starter is not None
+        if li_team in teams_with_lineup:
+            player["predicted_starter"] = match_player(player["n"], lineup["players"]) is not None
+        else:
+            # No predicted XI published for this team — unknown, NOT "benched".
+            player["predicted_starter"] = None
         player["next_match"] = lineup.get("match")
         injury = match_player(player["n"], injuries_by_team.get(li_team, []))
         if injury:
@@ -118,6 +175,9 @@ def collect(progress=print) -> dict:
                 "out_since": injury["out_since"],
             }
 
+    if unmapped_fixtures:
+        progress(f"NOTE: no fixture odds for team ids {sorted(unmapped_fixtures)}")
+
     return {
         "league": league,
         "budget": budget,
@@ -127,4 +187,5 @@ def collect(progress=print) -> dict:
         "injuries": injuries,
         "lineups": lineups,
         "recent_transfers": transfers,
+        "matchday": matchday_info,
     }

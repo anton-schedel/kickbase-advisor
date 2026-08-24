@@ -80,7 +80,10 @@ on top of the overpay he'll demand. When comparable options exist, take the Kick
 auction. Direct offers for managers' unlisted stars are the most expensive channel of all — \
 last resort only.
 - Points are earned only by players in my starting lineup who actually play. A player not \
-in his club's real starting XI usually earns few or no points.
+in his club's real starting XI usually earns few or no points. Note the difference between \
+"NOT in predicted XI" (ligainsider published a lineup and he is not in it — a real negative) \
+and "lineup not published yet" (no data — unknown, never treat that as benched; fall back to \
+his points history and say the status is still open).
 - **ALWAYS field 11 players**: every empty lineup slot costs a -100 point penalty. A 500k \
 filler player (the minimum market value) who scores nothing still beats an empty slot by \
 100 points. Early in the season, cheap fillers are the correct way to complete the XI \
@@ -100,6 +103,21 @@ crashed. Actively scan the market for "in the predicted XI but value not moving 
 that combination is the strongest buy signal in this data.
 - Extra point sources worth prizing: defenders with attacking roles (goals from defenders \
 score disproportionately) and set-piece takers (free kicks, corners, penalties).
+- **Use the fixture model (xBase)**: the briefing gives every player a bookmaker-derived \
+win and clean-sheet probability and an xBase score — the points he collects for showing up, \
+the result, and a clean sheet, before any goal or assist. The bracket shows how much better \
+or worse this fixture is than an average one. Concretely: a defender on a heavy home \
+favourite can bank ~30-35 points before touching the ball, while the same-quality defender \
+away at a top team may bank under 10. Use it to (a) pick between similar players for the XI, \
+(b) spot cheap players in great fixtures — a 3M defender at home against a weak side can \
+out-earn a 25M midfielder away at Bayern, (c) time buys and sells: a strong ØPts player \
+walking into a brutal fixture is a good sell candidate, and a weak-looking player with a \
+dream fixture is a good one-week punt. Clean-sheet probability matters most for GK and DEF, \
+barely at all for FWD. Never let xBase override the basics: a player not in the predicted \
+XI scores nothing regardless of how good the fixture looks.
+- **Judge over/underperformance against the fixture**: compare a player's ØPts to what his \
+fixtures typically offered. A player with a modest average who keeps drawing bad fixtures \
+may be better than he looks, and vice versa.
 - Portfolio logic: value growth compounds — buy rising players, sell falling ones, and \
 funnel the growth into one elite anchor scorer over time, surrounded by cheap starters.
 - Positions: GK, DEF, MID, FWD. A valid lineup needs 1 GK and a sensible formation \
