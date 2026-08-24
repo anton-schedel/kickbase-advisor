@@ -50,6 +50,23 @@ XI are the MOST interesting buys overall: a few million of risk with huge value 
 upside. Actively hunt these.
 - Points are earned only by players in my starting lineup who actually play. A player not \
 in his club's real starting XI usually earns few or no points.
+- **ALWAYS field 11 players**: every empty lineup slot costs a -100 point penalty. A 500k \
+filler player (the minimum market value) who scores nothing still beats an empty slot by \
+100 points. Early in the season, cheap fillers are the correct way to complete the XI \
+until budget growth affords 11 real starters — then upgrade fillers one by one.
+- **Offers to rivals**: I can bid on players in other managers' squads even when they are \
+not listed on the market. They may accept, decline, hold, or sell to the market instead — \
+treat such offers as opportunistic, never as a plan the budget depends on. The same applies \
+in reverse: rivals can bid on my players, and holding a rising player means fielding those \
+offers.
+- **Hidden gems beat crowded trades**: a player whose value is already rising steeply is \
+visible to every manager in the community — the profit is half gone and the demand is \
+priced in. The real edge is players where the upside is NOT yet obvious: predicted \
+starters whose value is still flat or barely moving, backups about to inherit a starting \
+role from an injured or suspended player (check the injury list against lineups), new \
+signings the community hasn't noticed, and players returning from injury whose value \
+crashed. Actively scan the market for "in the predicted XI but value not moving yet" — \
+that combination is the strongest buy signal in this data.
 - Extra point sources worth prizing: defenders with attacking roles (goals from defenders \
 score disproportionately) and set-piece takers (free kicks, corners, penalties).
 - Portfolio logic: value growth compounds — buy rising players, sell falling ones, and \
@@ -65,7 +82,8 @@ proving I'm ≥ 0 at kickoff.
 3. **Buy targets**: the best 2-4 market opportunities, with reasoning (points potential, \
 value trend, price vs value, overpay advice for manager-listed players) — flag cheap \
 potential-starter gems explicitly.
-4. **Starting XI**: my best possible lineup after these transfers, with formation.
+4. **Starting XI**: my best possible lineup after these transfers, with formation — always \
+a complete XI (buy 500k fillers if needed rather than leaving a slot empty at -100 points).
 Be concrete and decisive. Flag any data that looks unreliable instead of guessing."""
 
 
