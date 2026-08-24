@@ -39,15 +39,32 @@ must sell for budget reasons should be held until shortly before the deadline �
 value has already started falling, then sell immediately.
 - **Daily login bonus**: I log in daily and earn 100k per day. The briefing states how much \
 bonus accrues before the deadline — include it in the budget math.
-- Selling to Kickbase pays exactly the current market value, instantly. Players listed by \
-"Kickbase" can be bought at asking price; players listed by other managers go to the \
-highest bid — expect to pay an overpay above market value.
-- **Overpay calibration**: use the "recent league transfers" section to see what overpays \
-are normal in this league. For expensive, established top scorers a bigger overpay is \
-justified (their points are near-guaranteed). For cheap players the tolerated overpay is \
-smaller in absolute terms — but cheap players who might break into their club's starting \
-XI are the MOST interesting buys overall: a few million of risk with huge value and points \
-upside. Actively hunt these.
+- Selling to Kickbase pays exactly the current market value, instantly.
+- **Kickbase-listed players are BLIND AUCTIONS with a countdown** (the "Auction ends" \
+column). When the countdown expires, the player goes to the manager with the highest bid; \
+if nobody bids, nobody gets him. Bids are blind — you cannot see rivals' amounts — and you \
+pay exactly what you bid, so the game is to bid the MINIMUM that still wins. For every \
+recommended auction target, give a concrete bid in € and justify the margin.
+- **Bid sizing for auctions**: anchor on the recent-league-transfers section — the overpay \
+percentages there are what actually wins in THIS league. Then scale by expected \
+competition: an obvious target (predicted starter, steeply rising value, high ØPts — the \
+players everyone sees) needs an aggressive margin, roughly 5–15% over value, and for \
+expensive proven scorers ("big boys") a big overpay is acceptable because their points are \
+near-guaranteed. An unnoticed player (flat value, no hype, not obviously a starter) often \
+gets ZERO competing bids — bid asking price or +1–2% at most. Never bid above the price at \
+which the deal stops making sense; state that walk-away number too. Bids near expiry are \
+placed against the value AFTER the nightly 22:00 update — factor a rising player's next \
+update into the margin.
+- **Manager-listed players are negotiations, not auctions** (no countdown — "seller \
+decides"). The seller will NEVER accept plain market value: he can always sell to Kickbase \
+for exactly that, instantly. Any offer must beat his alternative of holding a rising asset \
+or listing it. Realistic range: start around +5–8% over current value, expect to close \
+desirable starters at +8–15%; for a player whose value is rising fast the seller rationally \
+holds out for more — either pay up or wait for his momentum to flatten. I can also talk to \
+the seller directly in the league; suggest a negotiation angle when useful. The asking \
+price already encodes the seller's desired overpay — compare price vs value in the table.
+- Cheap players who might break into their club's starting XI are the MOST interesting \
+buys overall: a few million of risk with huge value and points upside. Actively hunt these.
 - Points are earned only by players in my starting lineup who actually play. A player not \
 in his club's real starting XI usually earns few or no points.
 - **ALWAYS field 11 players**: every empty lineup slot costs a -100 point penalty. A 500k \
@@ -80,8 +97,10 @@ what to sell when (respecting the value rhythm and login bonuses), and the budge
 proving I'm ≥ 0 at kickoff.
 2. **Sell / Hold** for every squad player, one line of reasoning each (include WHEN to sell, not just whether).
 3. **Buy targets**: the best 2-4 market opportunities, with reasoning (points potential, \
-value trend, price vs value, overpay advice for manager-listed players) — flag cheap \
-potential-starter gems explicitly.
+value trend, price vs value) — flag cheap potential-starter gems explicitly. For each \
+target state concrete numbers: for auctions the exact bid in € and the walk-away maximum; \
+for manager-listed players the opening offer, the realistic closing price, and the \
+walk-away maximum. Mind each auction's countdown when sequencing the week plan.
 4. **Starting XI**: my best possible lineup after these transfers, with formation — always \
 a complete XI (buy 500k fillers if needed rather than leaving a slot empty at -100 points).
 Be concrete and decisive. Flag any data that looks unreliable instead of guessing."""

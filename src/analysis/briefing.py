@@ -52,10 +52,17 @@ def _squad_table(squad: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _expiry(p: dict) -> str:
+    exs = p.get("exs")
+    if exs is None:
+        return "seller decides"  # manager-listed: no countdown
+    return f"{exs / 3600:.1f}h"
+
+
 def _market_table(market: list[dict]) -> str:
     lines = [
-        "| Player | Pos | Team | Price | Value | Δ7d | Δ30d | Last season | Seller | Status |",
-        "|---|---|---|---|---|---|---|---|---|---|",
+        "| Player | Pos | Team | Price | Value | Δ7d | Δ30d | Last season | Seller | Auction ends | Bids | Status |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for p in sorted(market, key=lambda x: -x.get("mv", 0)):
         ch = p.get("mv_changes", {})
@@ -73,7 +80,7 @@ def _market_table(market: list[dict]) -> str:
         lines.append(
             f"| {p['n']} | {p['position']} | {p.get('li_team') or p['tid']} | {eur(p.get('prc'))} "
             f"| {eur(p.get('mv'))} | {delta(ch.get('7d'))} | {delta(ch.get('30d'))} "
-            f"| {season} | {seller} | {_flags(p)} |"
+            f"| {season} | {seller} | {_expiry(p)} | {p.get('ofc', 0)} | {_flags(p)} |"
         )
     return "\n".join(lines)
 
