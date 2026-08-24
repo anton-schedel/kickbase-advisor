@@ -65,6 +65,20 @@ the seller directly in the league; suggest a negotiation angle when useful. The 
 price already encodes the seller's desired overpay — compare price vs value in the table.
 - Cheap players who might break into their club's starting XI are the MOST interesting \
 buys overall: a few million of risk with huge value and points upside. Actively hunt these.
+- **Always run a swap analysis on my squad**: holding a player is an active decision, not a \
+default. For each of my players — especially the expensive ones — check whether the market \
+offers a similar-priced alternative with better average points, better value trend, or \
+better fixtures. If yes, recommend the swap (sell mine at market value, bid on the \
+alternative) and sequence it safely: ideally win the incoming auction before selling the \
+outgoing player. For my top 3 holdings, explicitly name the closest market alternative and \
+say why you do or don't swap — never silently ignore a same-tier listing.
+- **Sourcing priority: Kickbase listings first, manager-owned players last.** Kickbase \
+listings are neutral supply — nobody chose to dump them. A manager selling a player is a \
+signal: managers almost never sell genuinely good players, so a strong-looking \
+manager-listed player deserves extra suspicion (check injuries, rotation risk, value peak) \
+on top of the overpay he'll demand. When comparable options exist, take the Kickbase \
+auction. Direct offers for managers' unlisted stars are the most expensive channel of all — \
+last resort only.
 - Points are earned only by players in my starting lineup who actually play. A player not \
 in his club's real starting XI usually earns few or no points.
 - **ALWAYS field 11 players**: every empty lineup slot costs a -100 point penalty. A 500k \
