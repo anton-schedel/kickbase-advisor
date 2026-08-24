@@ -103,21 +103,25 @@ crashed. Actively scan the market for "in the predicted XI but value not moving 
 that combination is the strongest buy signal in this data.
 - Extra point sources worth prizing: defenders with attacking roles (goals from defenders \
 score disproportionately) and set-piece takers (free kicks, corners, penalties).
-- **Use the fixture model (xBase)**: the briefing gives every player a bookmaker-derived \
-win and clean-sheet probability and an xBase score — the points he collects for showing up, \
-the result, and a clean sheet, before any goal or assist. The bracket shows how much better \
-or worse this fixture is than an average one. Concretely: a defender on a heavy home \
-favourite can bank ~30-35 points before touching the ball, while the same-quality defender \
-away at a top team may bank under 10. Use it to (a) pick between similar players for the XI, \
-(b) spot cheap players in great fixtures — a 3M defender at home against a weak side can \
-out-earn a 25M midfielder away at Bayern, (c) time buys and sells: a strong ØPts player \
-walking into a brutal fixture is a good sell candidate, and a weak-looking player with a \
-dream fixture is a good one-week punt. Clean-sheet probability matters most for GK and DEF, \
-barely at all for FWD. Never let xBase override the basics: a player not in the predicted \
-XI scores nothing regardless of how good the fixture looks.
-- **Judge over/underperformance against the fixture**: compare a player's ØPts to what his \
-fixtures typically offered. A player with a modest average who keeps drawing bad fixtures \
-may be better than he looks, and vice versa.
+- **"Predicted pts" is the primary decision metric.** Every player has a full point \
+forecast for this matchday: his own per-90 scoring rate (goals, assists, actions — recovered \
+from his match history) projected onto this specific fixture's win and clean-sheet \
+probabilities and his expected minutes. Use it directly to pick the XI, to compare a buy \
+target against the player he would replace, and to judge whether a sale is expensive in \
+points. The bracket is his realistic range — a wide range means a volatile player, a narrow \
+one means a dependable floor. Prefer the prediction over raw ØPts, since ØPts ignores who \
+the opponent is. Rows marked ⚠ have no published lineup, so their minutes are guessed from \
+history — treat those predictions as provisional.
+- **Read the season history column, not just one average.** It shows starts/appearances and \
+average per season. A player with a poor recent average from a handful of substitute \
+appearances is NOT a poor player — he was a backup, and if he is now in the predicted XI his \
+earlier full-season form is the better guide. Equally, a big average earned in the 2. \
+Bundesliga does not transfer one-for-one to the Bundesliga (the model already discounts it, \
+but say so when it drives a recommendation). Call out explicitly when the headline average \
+misleads.
+- **Value per point**: when comparing buys, weigh predicted points against price. A cheap \
+player predicted at 60 can be better business than a 25M player predicted at 90, especially \
+while the budget is tight — but only if he is actually in the XI.
 - Portfolio logic: value growth compounds — buy rising players, sell falling ones, and \
 funnel the growth into one elite anchor scorer over time, surrounded by cheap starters.
 - Positions: GK, DEF, MID, FWD. A valid lineup needs 1 GK and a sensible formation \
@@ -134,7 +138,9 @@ target state concrete numbers: for auctions the exact bid in € and the walk-aw
 for manager-listed players the opening offer, the realistic closing price, and the \
 walk-away maximum. Mind each auction's countdown when sequencing the week plan.
 4. **Starting XI**: my best possible lineup after these transfers, with formation — always \
-a complete XI (buy 500k fillers if needed rather than leaving a slot empty at -100 points).
+a complete XI (buy 500k fillers if needed rather than leaving a slot empty at -100 points). \
+State the total predicted points of that XI, and name the closest alternative lineup you \
+rejected with its total, so the margin is visible.
 Be concrete and decisive. Flag any data that looks unreliable instead of guessing."""
 
 

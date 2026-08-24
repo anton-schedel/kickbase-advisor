@@ -38,16 +38,33 @@ def _status_cell(p: dict) -> str:
     return "<td class='status bench'>Bank</td>"
 
 
+def _pred_cell(p: dict) -> str:
+    pred = p.get("prediction")
+    if not pred:
+        return "<td class='num'>–</td>"
+    thin = " *" if pred.get("confidence") == "low" else ""
+    title = f"{pred['expected_minutes']:.0f} min expected"
+    if pred.get("note"):
+        title += f" — {pred['note']}"
+    return f"<td class='num pred' title='{html.escape(title)}'>{pred['points']:.0f}{thin}</td>"
+
+
 def _squad_rows(squad: list[dict]) -> str:
     rows = []
-    for p in sorted(squad, key=lambda x: -x.get("mv", 0)):
+    for p in sorted(squad, key=lambda x: -(x.get("prediction") or {}).get("points", -999)):
         ch = p.get("mv_changes", {})
+        fixture = p.get("fixture") or {}
+        opponent = (
+            f"{'H' if fixture.get('home') else 'A'} {fixture.get('opponent')}"
+            if fixture
+            else ""
+        )
         rows.append(
             "<tr>"
-            f"<td class='name'>{html.escape(p['n'])}<span class='sub'>{p['position']} · {html.escape(p.get('li_team') or '')}</span></td>"
+            f"<td class='name'>{html.escape(p['n'])}<span class='sub'>{p['position']} · {html.escape(p.get('li_team') or '')} · {html.escape(opponent)}</span></td>"
             f"<td class='num'>{eur_m(p.get('mv'))}</td>"
             + _trend_cell(ch.get("7d"))
-            + f"<td class='num'>{p.get('ap') or '–'}</td>"
+            + _pred_cell(p)
             + _status_cell(p)
             + "</tr>"
         )
@@ -56,8 +73,7 @@ def _squad_rows(squad: list[dict]) -> str:
 
 def _market_rows(market: list[dict], limit: int = 12) -> str:
     interesting = sorted(
-        market,
-        key=lambda p: (not p.get("predicted_starter"), -(p.get("mv_changes", {}).get("7d") or 0)),
+        market, key=lambda p: -(p.get("prediction") or {}).get("points", -999)
     )[:limit]
     rows = []
     for p in interesting:
@@ -68,6 +84,7 @@ def _market_rows(market: list[dict], limit: int = 12) -> str:
             f"<td class='name'>{html.escape(p['n'])}<span class='sub'>{p['position']} · {html.escape(p.get('li_team') or '')} · {html.escape(seller)}</span></td>"
             f"<td class='num'>{eur_m(p.get('prc'))}</td>"
             + _trend_cell(ch.get("7d"))
+            + _pred_cell(p)
             + _status_cell(p)
             + "</tr>"
         )
@@ -142,6 +159,7 @@ td.name .sub {{ display: block; font-weight: 400; font-size: .74rem; color: var(
 td.num {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }}
 td.num.up {{ color: var(--green); }}
 td.num.down {{ color: var(--red); }}
+td.num.pred {{ font-weight: 700; font-size: 1.02rem; }}
 td.status {{ text-align: right; font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }}
 .status.in {{ color: var(--green); font-weight: 700; }}
 .status.bench {{ color: var(--muted); }}
@@ -170,17 +188,19 @@ footer {{ margin-top: 40px; font-size: .74rem; color: var(--muted); }}
 <h2>Advice</h2>
 <div class="advice">{advice_html}</div>
 
-<h2>Squad</h2>
+<h2>Squad — predicted points, matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
 <div class="tablewrap"><table class="data">
 {_squad_rows(squad)}
 </table></div>
 
-<h2>Market — top opportunities</h2>
+<h2>Market — best predicted points</h2>
 <div class="tablewrap"><table class="data">
 {_market_rows(data["market"])}
 </table></div>
 
-<footer>Data: Kickbase API + ligainsider.de · advice by Claude · not financial advice, just football</footer>
+<footer>Predicted points = player's own per-90 scoring rate projected onto this fixture's
+win and clean-sheet odds. <strong>*</strong> marks thin data pulled toward the positional baseline.<br>
+Data: Kickbase API + ligainsider.de · advice by Claude · not financial advice, just football</footer>
 </body>
 </html>
 """

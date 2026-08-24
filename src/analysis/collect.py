@@ -8,6 +8,7 @@ from kickbase.client import KickbaseClient
 from ligainsider.scraper import LigainsiderScraper
 from analysis.matching import map_teams, match_player
 from analysis.odds import match_outlook, expected_base_points, neutral_base_points
+from analysis.prediction import player_profile, predict, position_priors
 
 BUNDESLIGA_COMPETITION_ID = "1"
 
@@ -25,6 +26,28 @@ def _mv_changes(history: dict) -> dict:
         if len(points) > days:
             out[label] = current - points[-1 - days]
     return out
+
+
+def _history(performance: dict, limit: int = 3) -> list[dict]:
+    """Recent seasons with appearances, starts and average — the ØPts column
+    only shows the newest season, which hides bench years and division changes.
+    """
+    out = []
+    for season in performance.get("it", []):
+        played = [m for m in season.get("ph", []) if m.get("p") is not None]
+        if not played:
+            continue
+        starts = sum(1 for m in played if m.get("st") == 5)
+        out.append(
+            {
+                "season": season.get("ti"),
+                "competition": season.get("n"),
+                "apps": len(played),
+                "starts": starts,
+                "avg": round(sum(m["p"] for m in played) / len(played)),
+            }
+        )
+    return out[-limit:]
 
 
 def _season_stats(performance: dict) -> dict:
@@ -113,12 +136,14 @@ def collect(progress=print) -> dict:
 
     progress("Kickbase: fetching market value histories and performance...")
     for player in squad + market:
+        player["position"] = POSITIONS.get(player.get("pos"), "?")
         # Only timeframe=365 returns data; shorter windows come back empty.
         history = client.player_market_value(league_id, player["i"], timeframe=365)
         player["mv_changes"] = _mv_changes(history)
-    for player in market:
         perf = client.player_performance(league_id, player["i"])
         player["stats"] = _season_stats(perf)
+        player["history"] = _history(perf)
+        player["profile"] = player_profile(perf, player["position"])
 
     scraper = LigainsiderScraper()
     li_teams = scraper.bundesliga_teams()
@@ -149,7 +174,6 @@ def collect(progress=print) -> dict:
     unmapped_fixtures = set()
 
     for player in squad + market:
-        player["position"] = POSITIONS.get(player.get("pos"), "?")
         outlook = outlooks.get(player["tid"])
         if outlook:
             player["fixture"] = outlook
@@ -177,6 +201,25 @@ def collect(progress=print) -> dict:
 
     if unmapped_fixtures:
         progress(f"NOTE: no fixture odds for team ids {sorted(unmapped_fixtures)}")
+
+    # Predictions need the fixture, the profile and the lineup signal together.
+    # Baselines come from the league's own well-sampled players, so a thin
+    # record gets pulled toward what that position normally produces.
+    priors = position_priors([(p["position"], p.get("profile")) for p in squad + market])
+    progress("Baseline pts/90 per position: " + ", ".join(f"{k} {v:.0f}" for k, v in sorted(priors.items())))
+
+    predicted = 0
+    for player in squad + market:
+        player["prediction"] = predict(
+            player.get("profile"),
+            player.get("fixture"),
+            player["position"],
+            player.get("predicted_starter"),
+            injured=bool(player.get("injury")),
+            prior=priors.get(player["position"]),
+        )
+        predicted += 1 if player["prediction"] else 0
+    progress(f"Predictions: {predicted}/{len(squad) + len(market)} players")
 
     return {
         "league": league,

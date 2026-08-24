@@ -44,6 +44,36 @@ def _xpts_cell(p: dict) -> str:
     return f"{x:.0f} ({x - neutral:+.0f})"
 
 
+def _prediction_cell(p: dict) -> str:
+    pred = p.get("prediction")
+    if not pred:
+        return "no data"
+    if pred.get("note") == "injured/suspended":
+        return "**0** (out)"
+    text = f"**{pred['points']:.0f}**"
+    if pred.get("low") is not None:
+        text += f" ({pred['low']:.0f}–{pred['high']:.0f})"
+    text += f", {pred['expected_minutes']:.0f}min"
+    if pred.get("confidence") == "low":
+        text += " ⚠thin data"
+    elif pred.get("note"):
+        text += " ⚠"
+    return text
+
+
+def _history_cell(p: dict) -> str:
+    seasons = p.get("history") or []
+    if not seasons:
+        return "–"
+    parts = []
+    for s in seasons:
+        league = "2.BL" if "2." in (s["competition"] or "") else "BL"
+        season = s["season"] or ""
+        label = f"{season[2:4]}/{season[7:9]}" if len(season) >= 9 else season
+        parts.append(f"{label} {league}: {s['starts']}st/{s['apps']}app Ø{s['avg']}")
+    return "; ".join(parts)
+
+
 def _flags(p: dict) -> str:
     flags = []
     if p.get("injury"):
@@ -59,16 +89,16 @@ def _flags(p: dict) -> str:
 
 def _squad_table(squad: list[dict]) -> str:
     lines = [
-        "| Player | Pos | Team | Value | Δ1d | Δ7d | Δ30d | Pts | ØPts | Fixture | xBase | Status |",
+        "| Player | Pos | Team | Value | Δ1d | Δ7d | Δ30d | Season history (starts/apps) | Fixture | xBase | **Predicted pts** | Status |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
-    for p in sorted(squad, key=lambda x: -x.get("mv", 0)):
+    for p in sorted(squad, key=lambda x: -(x.get("prediction") or {}).get("points", -999)):
         ch = p.get("mv_changes", {})
         lines.append(
             f"| {p['n']} | {p['position']} | {p.get('li_team') or p['tid']} | {eur(p.get('mv'))} "
             f"| {delta(ch.get('1d'))} | {delta(ch.get('7d'))} | {delta(ch.get('30d'))} "
-            f"| {p.get('p', '-')} | {p.get('ap', '-')} "
-            f"| {_fixture_cell(p)} | {_xpts_cell(p)} | {_flags(p)} |"
+            f"| {_history_cell(p)} "
+            f"| {_fixture_cell(p)} | {_xpts_cell(p)} | {_prediction_cell(p)} | {_flags(p)} |"
         )
     return "\n".join(lines)
 
@@ -82,10 +112,10 @@ def _expiry(p: dict) -> str:
 
 def _market_table(market: list[dict]) -> str:
     lines = [
-        "| Player | Pos | Team | Price | Value | Δ7d | Δ30d | Last season | Seller | Auction ends | Bids | Fixture | xBase | Status |",
+        "| Player | Pos | Team | Price | Value | Δ7d | Δ30d | Season history (starts/apps) | Seller | Auction ends | Bids | Fixture | **Predicted pts** | Status |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
-    for p in sorted(market, key=lambda x: -x.get("mv", 0)):
+    for p in sorted(market, key=lambda x: -(x.get("prediction") or {}).get("points", -999)):
         ch = p.get("mv_changes", {})
         all_stats = p.get("stats") or {}
         stats = all_stats.get("current") or {}
@@ -101,8 +131,8 @@ def _market_table(market: list[dict]) -> str:
         lines.append(
             f"| {p['n']} | {p['position']} | {p.get('li_team') or p['tid']} | {eur(p.get('prc'))} "
             f"| {eur(p.get('mv'))} | {delta(ch.get('7d'))} | {delta(ch.get('30d'))} "
-            f"| {season} | {seller} | {_expiry(p)} | {p.get('ofc', 0)} "
-            f"| {_fixture_cell(p)} | {_xpts_cell(p)} | {_flags(p)} |"
+            f"| {_history_cell(p)} | {seller} | {_expiry(p)} | {p.get('ofc', 0)} "
+            f"| {_fixture_cell(p)} | {_prediction_cell(p)} | {_flags(p)} |"
         )
     return "\n".join(lines)
 
@@ -170,16 +200,16 @@ def build_briefing(data: dict, now: datetime | None = None) -> str:
 {_standings(data['ranking'])}
 
 ## My squad
-(Δ = market value change; Pts = current season total, ØPts = average per matchday. Status from ligainsider.de: injury flags and whether the player is in his club's predicted starting XI for the next matchday. Fixture and xBase explained under "Scoring & fixture model" below.)
+(Sorted by predicted points. Δ = market value change. Status from ligainsider.de: injury flags and whether the player is in his club's predicted starting XI. Season history, Fixture and Predicted pts are explained under "Scoring & prediction model" below.)
 
 {_squad_table(squad)}
 
 ## Transfer market ({len(data['market'])} listings)
-(Price = asking price. Players listed by "Kickbase" are free picks; players listed by other managers go to the highest bidder.)
+(Sorted by predicted points. Price = asking price. Players listed by "Kickbase" are blind auctions decided at the countdown; players listed by other managers are negotiations.)
 
 {_market_table(data['market'])}
 
-## Scoring & fixture model
+## Scoring & prediction model
 Kickbase points a full-90 starter collects regardless of goals or actions:
 Startelf +5, minutes +10, **win +15 / draw 0 / loss −15**, and clean sheet
 (**GK +50, DEF +30, MID +20, FWD +10**). On top come goals (GK +120, DEF +100,
@@ -189,13 +219,28 @@ red −50, own goal −60.
 **Fixture** shows home/away, opponent, and the bookmaker-implied win and
 clean-sheet probability (odds come from the Kickbase API, margin removed,
 fitted with a Poisson goal model).
-**xBase** = expected points from appearance + result + clean sheet only —
-the fixture-driven floor, excluding goals/assists (that upside is what ØPts
-reflects). The bracket is the difference from an average fixture: `+8` means
-this matchday is worth ~8 points more than a neutral one for that player,
-`−12` means the fixture actively drags him down. Use xBase to compare
-similar players and to judge whether a high ØPts player is walking into a bad
-matchup — but never let it override a player simply not being in the XI.
+
+**Predicted pts** is a full point forecast for this matchday, not a floor:
+
+    predicted = fixture part + player part
+
+The *fixture part* is appearance + minutes + win/loss + clean sheet, computed
+from the probabilities above. The *player part* is that player's own scoring
+rate — goals, assists, duels, passes, saves — recovered by taking every match
+he has played, subtracting the fixture part he was entitled to that day, and
+averaging the remainder per 90 minutes (recent season weighted double, 2.
+Bundesliga output discounted 15%). It is then scaled by his expected minutes,
+which come from the predicted lineup, or from his own historical start rate
+when no lineup is published (those rows are marked ⚠).
+The bracket is his typical range (20th–80th percentile of his own past
+matches, scaled to this fixture) — a genuine spread, not a confidence interval.
+**xBase** is the fixture part alone, kept for reference, with the bracket
+showing how this matchup compares to an average one.
+
+**Season history** gives starts/appearances and average per season, because a
+single ØPts number hides bench years and division changes — a player with
+Ø6 from five substitute appearances is a very different asset from a player
+with Ø6 across 30 starts.
 
 ## Recent league transfers (what competitors actually paid)
 {_transfers_section(data)}
