@@ -180,6 +180,14 @@ def archive_predictions(project_root: Path, stamp: str, data: dict) -> None:
                 "predicted": round(prediction["points"], 1),
                 # The baseline the backtest showed is hard to beat.
                 "naive": seasons[-1]["avg"] if seasons else None,
+                # 50/50 blend was the best blind performer; scored alongside the
+                # model so real results decide which to trust.
+                "blend": (
+                    round(0.5 * prediction["points"] + 0.5 * seasons[-1]["avg"], 1)
+                    if seasons
+                    else None
+                ),
+                "expected_goals": round(prediction.get("expected_goals") or 0, 3),
                 "predicted_starter": player.get("predicted_starter"),
                 "p_win": (player.get("fixture") or {}).get("p_win"),
             }

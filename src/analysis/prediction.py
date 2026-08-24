@@ -23,6 +23,20 @@ import statistics
 from analysis.odds import CLEAN_SHEET_POINTS, WIN_POINTS, LOSS_POINTS
 
 STARTER_STATUS = 5  # "st" in the performance feed; 3/4 mean substituted in
+
+# The "k" list on each match records which notable events happened. Codes were
+# decoded by cross-checking counts against Understat's goal and assist totals
+# for the 2025/26 Bundesliga — 19 of 19 players agreed exactly.
+GOAL_CODE = 1
+ASSIST_CODE = 3
+GOAL_POINTS = {"GK": 120, "DEF": 100, "MID": 90, "FWD": 80}
+ASSIST_POINTS = {"GK": 55, "DEF": 45, "MID": 35, "FWD": 35}
+# Goals and assists are the biggest single swings in a score, so they are
+# modelled separately and scaled by how much the fixture favours attacking.
+LEAGUE_AVG_TEAM_GOALS = 1.5
+GOAL_RATE_PRIOR = {"GK": 0.005, "DEF": 0.04, "MID": 0.10, "FWD": 0.25}
+ASSIST_RATE_PRIOR = {"GK": 0.01, "DEF": 0.06, "MID": 0.12, "FWD": 0.12}
+RATE_SHRINKAGE_MINUTES = 900
 STARTING_XI_BONUS = 5
 SUB_BONUS = 2
 CLEAN_SHEET_RATE = {"GK": 5, "DEF": 3, "MID": 2, "FWD": 1}  # per 10 minutes
@@ -100,10 +114,18 @@ def _decompose(match: dict, position: str) -> dict | None:
         lost=scored < conceded,
         clean_sheet=conceded == 0,
     )
+    codes = match.get("k") or []
+    goals = sum(1 for code in codes if code == GOAL_CODE)
+    assists = sum(1 for code in codes if code == ASSIST_CODE)
+    goal_points = goals * GOAL_POINTS.get(position, 0) + assists * ASSIST_POINTS.get(position, 0)
     return {
         "minutes": minutes,
         "points": points,
-        "residual": points - base,
+        # Residual after removing both the fixture and the goal/assist points,
+        # so those are not counted twice when they are predicted separately.
+        "residual": points - base - goal_points,
+        "goals": goals,
+        "assists": assists,
         "started": match.get("st") == STARTER_STATUS,
     }
 
@@ -140,6 +162,7 @@ def profile_from_records(records: list[dict], position: str) -> dict | None:
     weight_of = {season: SEASON_WEIGHTS[i] for i, season in enumerate(reversed(recent))}
 
     weighted_residual = weighted_minutes = 0.0
+    weighted_goals = weighted_assists = 0.0
     per90_samples: list[float] = []
     starts = appearances = scheduled = 0
 
@@ -156,6 +179,8 @@ def profile_from_records(records: list[dict], position: str) -> dict | None:
         starts += 1 if decomposed["started"] else 0
         weighted_residual += decomposed["residual"] * weight * level
         weighted_minutes += decomposed["minutes"] * weight
+        weighted_goals += decomposed["goals"] * weight * level
+        weighted_assists += decomposed["assists"] * weight * level
         if decomposed["minutes"] >= 60:
             per90_samples.append(decomposed["residual"] * level * 90 / decomposed["minutes"])
 
@@ -164,6 +189,10 @@ def profile_from_records(records: list[dict], position: str) -> dict | None:
 
     return {
         "residual_per90_raw": weighted_residual / weighted_minutes * 90,
+        "goals_per90_raw": weighted_goals / weighted_minutes * 90,
+        "assists_per90_raw": weighted_assists / weighted_minutes * 90,
+        "goals": weighted_goals,
+        "assists": weighted_assists,
         "minutes": weighted_minutes,
         "start_rate": starts / scheduled if scheduled else 0.0,
         "play_rate": appearances / scheduled if scheduled else 0.0,
@@ -195,12 +224,14 @@ def position_priors(profiles: list[tuple[str, dict | None]]) -> dict[str, float]
     return priors
 
 
+def _shrink(observed: float, minutes: float, prior: float, weight: float = RATE_SHRINKAGE_MINUTES) -> float:
+    """Pull a per-90 rate toward a baseline in proportion to how thin the sample is."""
+    return (minutes * observed + weight * prior) / (minutes + weight)
+
+
 def shrunk_rate(profile: dict, prior: float) -> float:
     """Blend the observed rate toward the positional baseline by sample size."""
-    minutes = profile["minutes"]
-    return (minutes * profile["residual_per90_raw"] + SHRINKAGE_MINUTES * prior) / (
-        minutes + SHRINKAGE_MINUTES
-    )
+    return _shrink(profile["residual_per90_raw"], profile["minutes"], prior, SHRINKAGE_MINUTES)
 
 
 def _spread(samples: list[float]) -> tuple[float, float] | None:
@@ -270,7 +301,22 @@ def predict(
     clean_sheet_points = outlook["p_clean_sheet"] * cs_rate * (blocks + full_match_chance)
     skill_points = rate * expected_minutes / 90
 
-    total = appearance + minute_points + result_points + clean_sheet_points + skill_points
+    # Goals and assists: the player's own rate, scaled by how strong his team's
+    # attack looks in this specific fixture (from the odds-fitted goal model).
+    attack_factor = (outlook.get("xg_for") or LEAGUE_AVG_TEAM_GOALS) / LEAGUE_AVG_TEAM_GOALS
+    goal_rate = _shrink(
+        profile.get("goals_per90_raw", 0.0), profile["minutes"], GOAL_RATE_PRIOR.get(position, 0.1)
+    )
+    assist_rate = _shrink(
+        profile.get("assists_per90_raw", 0.0), profile["minutes"], ASSIST_RATE_PRIOR.get(position, 0.1)
+    )
+    expected_goals = goal_rate * expected_minutes / 90 * attack_factor
+    expected_assists = assist_rate * expected_minutes / 90 * attack_factor
+    goal_points = expected_goals * GOAL_POINTS.get(position, 0) + expected_assists * ASSIST_POINTS.get(
+        position, 0
+    )
+
+    total = appearance + minute_points + result_points + clean_sheet_points + skill_points + goal_points
 
     result = {
         "points": total,
@@ -278,6 +324,9 @@ def predict(
         "p_start": p_start,
         "fixture_part": appearance + minute_points + result_points + clean_sheet_points,
         "skill_part": skill_points,
+        "goal_part": goal_points,
+        "expected_goals": expected_goals,
+        "expected_assists": expected_assists,
         "confidence": confidence,
         "rate_used": rate,
     }
@@ -288,10 +337,11 @@ def predict(
         result["note"] = "; ".join(notes)
     spread = profile.get("spread")
     if spread and p_start > 0.5:
-        # Same structure as the prediction: fixed fixture part plus the
-        # player's own 20th/80th percentile output, so low <= points <= high.
-        fixture_part = result["fixture_part"]
+        # Same structure as the prediction — fixture and goal parts held fixed,
+        # the player's own 20th/80th percentile action output varying — so the
+        # range always brackets the prediction.
+        floor = result["fixture_part"] + goal_points
         scale = expected_minutes / 90
-        result["low"] = fixture_part + spread[0] * scale
-        result["high"] = fixture_part + spread[1] * scale
+        result["low"] = floor + spread[0] * scale
+        result["high"] = floor + spread[1] * scale
     return result

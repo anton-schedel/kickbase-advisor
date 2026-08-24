@@ -54,6 +54,9 @@ def _prediction_cell(p: dict) -> str:
     if pred.get("low") is not None:
         text += f" ({pred['low']:.0f}–{pred['high']:.0f})"
     text += f", {pred['expected_minutes']:.0f}min"
+    xg = pred.get("expected_goals")
+    if xg:
+        text += f", xG {xg:.2f}"
     if pred.get("confidence") == "low":
         text += " ⚠thin data"
     elif pred.get("note"):
@@ -308,10 +311,13 @@ fitted with a Poisson goal model).
     predicted = fixture part + player part
 
 The *fixture part* is appearance + minutes + win/loss + clean sheet, computed
-from the probabilities above. The *player part* is that player's own scoring
-rate — goals, assists, duels, passes, saves — recovered by taking every match
-he has played, subtracting the fixture part he was entitled to that day, and
-averaging the remainder per 90 minutes (recent season weighted double, 2.
+from the probabilities above. The *player part* splits again. Goals and assists are
+predicted from his own per-90 goal and assist rate (read from the event codes
+on every match he has played, verified against Understat), scaled by how strong
+his team's attack looks in this fixture — `xG` in the cell is his expected goals
+for this match. Everything else — duels, passes, saves — is recovered by taking
+every match he has played, subtracting the fixture and goal points he was
+entitled to that day, and averaging the remainder per 90 minutes (recent season weighted double, 2.
 Bundesliga output discounted 15%). It is then scaled by his expected minutes,
 which come from the predicted lineup, or from his own historical start rate
 when no lineup is published (those rows are marked ⚠).

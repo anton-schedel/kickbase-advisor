@@ -73,6 +73,37 @@ Shrinkage helps, modestly and consistently.
 The curve is flat between 300 and 1500. The current 600 sits at the minimum;
 the exact value barely matters.
 
+## Update — goal/assist term added
+
+The `k` field on each match records which events occurred. The codes were
+decoded by cross-checking counts against Understat's totals for the 2025/26
+Bundesliga: **19 of 19 players agreed exactly** (Guirassy 17 goals, El Mala 13,
+Uzun 8 goals / 4 assists, Ryerson 0 goals / 15 assists). So `k` code 1 = goal,
+code 3 = assist, with certainty.
+
+Goals and assists are now removed from the residual and predicted separately
+from the player's own goal rate, scaled by the attacking strength the odds
+imply for his team that day.
+
+| Method (blind) | MAE |
+|---|---|
+| Blend: 30% model + 70% career average | 51.1 |
+| Blend: 50/50 | 51.1 |
+| Player's career average (ØPts) | 51.3 |
+| **Model with goal/assist term** | **51.8** |
+| Player's last 10 matches | 52.1 |
+| Model without goal/assist term | 52.6 |
+| Position baseline | 53.9 |
+
+The goal term is worth **0.8 MAE** — the largest single modelling gain so far.
+The model still trails a plain career average by 0.5 in blind conditions, but
+the blind test forces every fixture to be average, which is exactly the signal
+the goal term exists to use. In production the attack factor comes from real
+odds and moves the goal component substantially (Guirassy: 70 goal points in a
+strong attacking fixture versus 25 in a weak one). Whether that closes the gap
+can only be settled forward, so both the model and a 50/50 blend with the
+career average are archived each run and scored against real results.
+
 ## What this changes
 
 1. **Do not read a single prediction as precise.** Show the range, not just the

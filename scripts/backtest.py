@@ -90,6 +90,7 @@ def evaluate(players: list[dict], priors: dict[str, float], shrinkage: float) ->
     """
     blind_keys = (
         "blind_model",
+        "blind_no_goals",
         "blind_position_only",
         "naive_avg",
         "naive_recent",
@@ -117,7 +118,8 @@ def evaluate(players: list[dict], priors: dict[str, float], shrinkage: float) ->
 
             minutes = decomposed["minutes"]
             actual = decomposed["points"]
-            fixture_part = actual - decomposed["residual"]
+            # actual = fixture part + goal/assist points + action residual
+            fixture_and_goals = actual - decomposed["residual"]
             scale = minutes / 90
 
             shrunk = (profile["minutes"] * profile["residual_per90_raw"] + shrinkage * prior) / (
@@ -144,18 +146,33 @@ def evaluate(players: list[dict], priors: dict[str, float], shrinkage: float) ->
 
             recent_points = past_points[-10:] or past_points
             naive_recent = statistics.fmean(recent_points) if recent_points else prior
-            blind_model = blind_fixture + shrunk * blind_scale
+
+            # Goal/assist points expected from his own rate. No historical odds
+            # exist, so the fixture's attacking strength is treated as average.
+            goal_rate = P._shrink(
+                profile.get("goals_per90_raw", 0.0), profile["minutes"], P.GOAL_RATE_PRIOR.get(position, 0.1)
+            )
+            assist_rate = P._shrink(
+                profile.get("assists_per90_raw", 0.0), profile["minutes"], P.ASSIST_RATE_PRIOR.get(position, 0.1)
+            )
+            expected_goal_points = (
+                goal_rate * blind_scale * P.GOAL_POINTS.get(position, 0)
+                + assist_rate * blind_scale * P.ASSIST_POINTS.get(position, 0)
+            )
+            blind_model = blind_fixture + shrunk * blind_scale + expected_goal_points
+            blind_no_goals = blind_fixture + shrunk * blind_scale
 
             predictions = {
                 "blind_model": blind_model,
+                "blind_no_goals": blind_no_goals,
                 "blind_position_only": blind_fixture + prior * blind_scale,
                 "naive_avg": naive,
                 "naive_recent": naive_recent,
                 "blend_50": 0.5 * blind_model + 0.5 * naive,
                 "blend_30": 0.3 * blind_model + 0.7 * naive,
-                "model": fixture_part + shrunk * scale,
-                "no_shrink": fixture_part + profile["residual_per90_raw"] * scale,
-                "position_only": fixture_part + prior * scale,
+                "model": fixture_and_goals + shrunk * scale,
+                "no_shrink": fixture_and_goals + profile["residual_per90_raw"] * scale,
+                "position_only": fixture_and_goals + prior * scale,
             }
             for name, value in predictions.items():
                 errors[name].append(abs(value - actual))
@@ -183,7 +200,7 @@ def evaluate(players: list[dict], priors: dict[str, float], shrinkage: float) ->
     }
 
 
-BLIND_KEYS = ("blind_model", "blind_position_only", "naive_avg", "naive_recent", "blend_50", "blend_30")
+BLIND_KEYS = ("blind_model", "blind_no_goals", "blind_position_only", "naive_avg", "naive_recent", "blend_50", "blend_30")
 
 
 def main() -> None:
@@ -200,7 +217,8 @@ def main() -> None:
     print(f"Actual points: mean {result['actual_mean']:.0f}, sd {result['actual_sd']:.0f}\n")
 
     labels = {
-        "blind_model": "Model, blind (no match info) — production-like",
+        "blind_model": "Model + goal/assist term, blind — production-like",
+        "blind_no_goals": "Model without goal/assist term, blind",
         "blind_position_only": "Position baseline, blind (ignores who he is)",
         "naive_avg": "Player's average so far (what ØPts shows)",
         "naive_recent": "Player's average over his last 10 matches",

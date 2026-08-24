@@ -60,6 +60,8 @@ def main() -> None:
                     "actual": decomposed["points"],
                     "minutes": decomposed["minutes"],
                     "naive": row.get("naive"),
+                    "blend": row.get("blend"),
+                    "goals": decomposed["goals"],
                 }
             )
 
@@ -70,9 +72,12 @@ def main() -> None:
         errors = [abs(r["predicted"] - r["actual"]) for r in rows]
         naive_errors = [abs(r["naive"] - r["actual"]) for r in rows if r.get("naive") is not None]
         print(f"\n=== Matchday {matchday} ({len(rows)} players) ===")
-        print(f"Model MAE: {statistics.fmean(errors):.1f}")
+        blend_errors = [abs(r["blend"] - r["actual"]) for r in rows if r.get("blend") is not None]
+        print(f"Model MAE:          {statistics.fmean(errors):.1f}")
         if naive_errors:
-            print(f"ØPts baseline MAE: {statistics.fmean(naive_errors):.1f}")
+            print(f"ØPts baseline MAE:  {statistics.fmean(naive_errors):.1f}")
+        if blend_errors:
+            print(f"50/50 blend MAE:    {statistics.fmean(blend_errors):.1f}")
         rows.sort(key=lambda r: -abs(r["predicted"] - r["actual"]))
         print("\nBiggest misses:")
         for r in rows[:8]:
