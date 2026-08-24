@@ -50,6 +50,20 @@ def collect(progress=print) -> dict:
     progress(f"Kickbase: logged in, league '{league['n']}'")
 
     budget = client.league_budget(league_id)
+    feed = client.get(f"/v4/leagues/{league_id}/activitiesFeed").get("af", [])
+    # Type 15 = completed transfer between managers/Kickbase, trp = price paid.
+    transfers = [
+        {
+            "player": ev["data"].get("pn"),
+            "player_id": ev["data"].get("pi"),
+            "buyer": ev["data"].get("byr"),
+            "seller": ev["data"].get("slr"),
+            "price": ev["data"].get("trp"),
+            "date": ev.get("dt"),
+        }
+        for ev in feed
+        if ev.get("t") == 15
+    ]
     ranking = client.league_ranking(league_id)
     squad = client.squad(league_id)["it"]
     market = client.market(league_id)["it"]
@@ -112,4 +126,5 @@ def collect(progress=print) -> dict:
         "market": market,
         "injuries": injuries,
         "lineups": lineups,
+        "recent_transfers": transfers,
     }
