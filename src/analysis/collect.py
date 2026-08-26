@@ -10,6 +10,8 @@ from analysis.matching import map_teams, match_player
 from analysis.odds import match_outlook, expected_base_points, neutral_base_points
 from analysis.prediction import player_profile, predict, position_priors
 from analysis.lineup import best_xi
+from analysis.upside import squad_benchmarks, upside
+from analysis.momentum import value_curve
 
 BUNDESLIGA_COMPETITION_ID = "1"
 
@@ -173,6 +175,9 @@ def collect(progress=print) -> dict:
         # Only timeframe=365 returns data; shorter windows come back empty.
         history = client.player_market_value(league_id, player["i"], timeframe=365)
         player["mv_changes"] = _mv_changes(history)
+        # Deltas say how far he moved; the curve says whether the move is
+        # speeding up or rolling over — that is what decides when to sell.
+        player["mv_curve"] = value_curve([it["mv"] for it in history.get("it", [])])
         perf = performance(player["i"])
         player["stats"] = _season_stats(perf)
         player["history"] = _history(perf)
@@ -244,6 +249,30 @@ def collect(progress=print) -> dict:
     if unmapped_fixtures:
         progress(f"NOTE: no fixture odds for team ids {sorted(unmapped_fixtures)}")
 
+    # Club squads let us price a player against the team-mates he would have to
+    # displace — the difference between a squad filler and a prospect.
+    club_squads: dict[str, list[dict]] = {}
+    club_benchmarks: dict[str, dict] = {}
+    for tid in sorted({p["tid"] for p in squad + market}):
+        try:
+            club = client.team_profile(tid)
+        except Exception as exc:  # a missing club must not sink the run
+            progress(f"NOTE: no team profile for {tid}: {exc}")
+            continue
+        club_squads[tid] = club.get("it", [])
+        club_benchmarks[tid] = squad_benchmarks(club_squads[tid])
+    progress(f"Club squads: {len(club_squads)} teams profiled")
+
+    candidates = 0
+    for player in squad + market:
+        team = club_squads.get(player["tid"])
+        if not team:
+            continue
+        mine = next((p for p in team if str(p.get("i")) == str(player["i"])), player)
+        player["upside"] = upside(mine, team, club_benchmarks[player["tid"]])
+        candidates += 1 if (player["upside"] or {}).get("is_candidate") else 0
+    progress(f"Breakout candidates (role upside): {candidates}")
+
     # Predictions need the fixture, the profile and the lineup signal together.
     # Baselines come from the league's own well-sampled players, so a thin
     # record gets pulled toward what that position normally produces.
@@ -259,6 +288,9 @@ def collect(progress=print) -> dict:
             player.get("predicted_starter"),
             injured=bool(player.get("injury")),
             prior=priors.get(player["position"]),
+            # Premium-only: Kickbase's own 1-5 starting likelihood. Absent on
+            # rival squads, which fall back to the scraped lineup.
+            start_prob=player.get("prob"),
         )
         predicted += 1 if player["prediction"] else 0
     progress(f"Predictions: {predicted}/{len(all_players)} players")

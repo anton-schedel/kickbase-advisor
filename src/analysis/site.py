@@ -28,11 +28,50 @@ def _trend_cell(value) -> str:
     return f"<td class='num {cls}'>{delta_k(value)}</td>"
 
 
+# The 7-day number says how far he moved; the phase says whether the move is
+# still accelerating or already rolling over. Amber is the useful one: still
+# green, but the rises are shrinking.
+PHASE_CLASS = {
+    "accelerating": "up",
+    "rising": "up",
+    "rebounding": "up",
+    "flat": "",
+    "cooling": "warn",
+    "topped out": "warn",
+    "falling": "down",
+}
+
+
+def _curve_cell(p: dict, weekly) -> str:
+    curve = p.get("mv_curve")
+    if not curve:
+        return _trend_cell(weekly)
+    cls = "up" if (weekly or 0) > 0 else "down" if (weekly or 0) < 0 else ""
+    phase_cls = PHASE_CLASS.get(curve["phase"], "")
+    title = (
+        f"last 3 days {curve['slope_recent'] / 1000:+.0f}k/day "
+        f"({curve['pct_per_day'] * 100:+.2f}%/day), "
+        f"7 days before that {curve['slope_prior'] / 1000:+.0f}k/day"
+    )
+    if curve["days_to_turn"] is not None:
+        title += f" — rise reaches zero in about {curve['days_to_turn']} days"
+    return (
+        f"<td class='num {cls}' title='{html.escape(title)}'>{delta_k(weekly)}"
+        f"<span class='sub {phase_cls}'>{curve['phase']}</span></td>"
+    )
+
+
 def _status_cell(p: dict) -> str:
     if p.get("injury"):
         inj = p["injury"]
         label = inj.get("status") or "verletzt"
         return f"<td class='status out' title='{html.escape(inj.get('news') or '')}'>✚ {html.escape(label)}</td>"
+    prob = p.get("prob")
+    if prob is not None:
+        # Kickbase's own 1-5 starting likelihood, 1 = nailed on.
+        labels = {1: "nailed on", 2: "very likely", 3: "uncertain", 4: "doubtful", 5: "unlikely"}
+        cls = "in" if prob <= 2 else ("bench" if prob >= 4 else "")
+        return f"<td class='status {cls}' title='Kickbase start rating: {labels.get(prob, prob)}'>{'XI' if prob <= 2 else ('?' if prob == 3 else 'OUT')}</td>"
     starter = p.get("predicted_starter")
     if starter is None:
         return "<td class='status bench' title='Ligainsider has not published this lineup yet'>?</td>"
@@ -147,7 +186,7 @@ def _squad_rows(squad: list[dict]) -> str:
             "<tr>"
             f"<td class='name'>{html.escape(p['n'])}<span class='sub'>{p['position']} · {html.escape(p.get('li_team') or '')} · {html.escape(opponent)}</span></td>"
             f"<td class='num'>{eur_m(p.get('mv'))}</td>"
-            + _trend_cell(ch.get("7d"))
+            + _curve_cell(p, ch.get("7d"))
             + _pred_cell(p)
             + _status_cell(p)
             + "</tr>"
@@ -167,7 +206,7 @@ def _market_rows(market: list[dict], limit: int = 12) -> str:
             "<tr>"
             f"<td class='name'>{html.escape(p['n'])}<span class='sub'>{p['position']} · {html.escape(p.get('li_team') or '')} · {html.escape(seller)}</span></td>"
             f"<td class='num'>{eur_m(p.get('prc'))}</td>"
-            + _trend_cell(ch.get("7d"))
+            + _curve_cell(p, ch.get("7d"))
             + _pred_cell(p)
             + _status_cell(p)
             + "</tr>"
@@ -238,12 +277,12 @@ def build_site(data: dict, advice_md: str, generated_at: datetime) -> str:
 <style>
 :root {{
   --paper: #faf7f0; --ink: #1d2733; --muted: #6b7480; --line: #e3ded2;
-  --green: #1d7a3e; --red: #c02f1d; --card: #ffffff; --highlight: #fdf3d4;
+  --green: #1d7a3e; --red: #c02f1d; --amber: #a8730a; --card: #ffffff; --highlight: #fdf3d4;
 }}
 @media (prefers-color-scheme: dark) {{
   :root {{
     --paper: #14181d; --ink: #e8e4da; --muted: #8b92a0; --line: #2a313a;
-    --green: #4cc472; --red: #e8604f; --card: #1b2129; --highlight: #2c2a1c;
+    --green: #4cc472; --red: #e8604f; --amber: #e0a33a; --card: #1b2129; --highlight: #2c2a1c;
   }}
 }}
 * {{ box-sizing: border-box; margin: 0; }}
@@ -282,6 +321,10 @@ td.name .sub {{ display: block; font-weight: 400; font-size: .74rem; color: var(
 td.num {{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }}
 td.num.up {{ color: var(--green); }}
 td.num.down {{ color: var(--red); }}
+td.num .sub {{ display: block; font-weight: 400; font-size: .68rem; letter-spacing: .02em; color: var(--muted); }}
+td.num .sub.up {{ color: var(--green); }}
+td.num .sub.warn {{ color: var(--amber); }}
+td.num .sub.down {{ color: var(--red); }}
 td.num.pred {{ font-weight: 700; font-size: 1.02rem; }}
 tr.rival.me td {{ background: var(--highlight); }}
 td.rank {{ width: 1.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }}
@@ -389,6 +432,10 @@ win and clean-sheet odds; the smaller range is his typical spread.
 <strong>*</strong> marks thin data pulled toward the positional baseline.
 Backtested over 9,199 past matches: single-match predictions carry a typical error of ~50 points,
 so use them to <em>rank</em> players, not as forecasts.<br>
+The word under each value change is where that player sits on his market value curve:
+the last 3 days' daily rise measured against the 7 days before it.
+<strong>cooling</strong> means still rising but at less than half the earlier pace — the top of
+the arc forming, and the moment to sell into strength. Tap a value for the daily numbers.<br>
 Data: Kickbase API + ligainsider.de · advice by Claude · not financial advice, just football</footer>
 </body>
 </html>

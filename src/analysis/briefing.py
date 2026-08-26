@@ -1,6 +1,12 @@
-"""Turn collected data into a markdown briefing for the decision agent."""
+"""Turn collected data into a markdown briefing for the decision agent.
+
+The briefing is built as named sections so the advisor can be run either as one
+big prompt or as focused stages that each receive only the sections they need.
+"""
 
 from datetime import datetime, timedelta
+
+from analysis.momentum import PHASE_URGENCY, describe as curve_describe, short as curve_short
 
 DAILY_LOGIN_BONUS = 100_000
 
@@ -87,19 +93,23 @@ def _flags(p: dict) -> str:
         flags.append("lineup not published yet")
     else:
         flags.append("starter" if starter else "NOT in predicted XI")
+    prob = p.get("prob")
+    if prob is not None:
+        labels = {1: "nailed on", 2: "very likely", 3: "uncertain", 4: "doubtful", 5: "unlikely"}
+        flags.append(f"KB start: {labels.get(prob, prob)}")
     return ", ".join(flags)
 
 
 def _squad_table(squad: list[dict]) -> str:
     lines = [
-        "| Player | Pos | Team | Value | Δ1d | Δ7d | Δ30d | Season history (starts/apps) | Fixture | xBase | **Predicted pts** | Status |",
+        "| Player | Pos | Team | Value | Curve | Δ7d | Δ30d | Season history (starts/apps) | Fixture | xBase | **Predicted pts** | Status |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for p in sorted(squad, key=lambda x: -(x.get("prediction") or {}).get("points", -999)):
         ch = p.get("mv_changes", {})
         lines.append(
             f"| {p['n']} | {p['position']} | {p.get('li_team') or p['tid']} | {eur(p.get('mv'))} "
-            f"| {delta(ch.get('1d'))} | {delta(ch.get('7d'))} | {delta(ch.get('30d'))} "
+            f"| {curve_short(p.get('mv_curve'))} | {delta(ch.get('7d'))} | {delta(ch.get('30d'))} "
             f"| {_history_cell(p)} "
             f"| {_fixture_cell(p)} | {_xpts_cell(p)} | {_prediction_cell(p)} | {_flags(p)} |"
         )
@@ -115,7 +125,7 @@ def _expiry(p: dict) -> str:
 
 def _market_table(market: list[dict]) -> str:
     lines = [
-        "| Player | Pos | Team | Price | Value | Δ7d | Δ30d | Season history (starts/apps) | Seller | Auction ends | Bids | Fixture | **Predicted pts** | Status |",
+        "| Player | Pos | Team | Price | Value | Curve | Δ30d | Season history (starts/apps) | Seller | Auction ends | Bids | Fixture | **Predicted pts** | Status |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for p in sorted(market, key=lambda x: -(x.get("prediction") or {}).get("points", -999)):
@@ -133,7 +143,7 @@ def _market_table(market: list[dict]) -> str:
         seller = (p.get("u") or {}).get("n", "Kickbase")
         lines.append(
             f"| {p['n']} | {p['position']} | {p.get('li_team') or p['tid']} | {eur(p.get('prc'))} "
-            f"| {eur(p.get('mv'))} | {delta(ch.get('7d'))} | {delta(ch.get('30d'))} "
+            f"| {eur(p.get('mv'))} | {curve_short(p.get('mv_curve'))} | {delta(ch.get('30d'))} "
             f"| {_history_cell(p)} | {seller} | {_expiry(p)} | {p.get('ofc', 0)} "
             f"| {_fixture_cell(p)} | {_prediction_cell(p)} | {_flags(p)} |"
         )
@@ -206,6 +216,83 @@ def _my_xi(data: dict) -> str:
     return "\n".join(lines)
 
 
+def _breakout_candidates(data: dict) -> str:
+    """Players priced below the role they could win at their own club."""
+    rows = []
+    for p in data["squad"] + data["market"]:
+        up = p.get("upside")
+        if not up or not up.get("is_candidate"):
+            continue
+        owned = "mine" if p in data["squad"] else ((p.get("u") or {}).get("n") or "Kickbase")
+        rows.append((up["upside_ratio"], p, up, owned))
+    if not rows:
+        return "_No player currently sits far enough below his club's starters to qualify._"
+    rows.sort(key=lambda r: -r[0])
+
+    lines = [
+        "| Player | Pos | Club | Value | Starters at his position cost | Room | Start rating | History | Where |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    labels = {1: "nailed on", 2: "very likely", 3: "uncertain", 4: "doubtful", 5: "unlikely"}
+    for ratio, p, up, owned in rows[:10]:
+        peers = ", ".join(f"{q['name']} {eur(q['value'])}" for q in up["peers"][:2])
+        history = "no Bundesliga record" if up["unproven"] else f"Ø{p.get('ap')}"
+        lines.append(
+            f"| {p['n']} | {p['position']} | {p.get('li_team') or p['tid']} | {eur(p.get('mv'))} "
+            f"| {eur(up['peer_starter_value'])} ({peers}) | **{ratio:.1f}x** "
+            f"| {labels.get(p.get('prob'), '?')} | {history} | {owned} |"
+        )
+    return "\n".join(lines)
+
+
+def _curve_rows(players: list[dict], owner_label=None) -> list[str]:
+    rows = []
+    for p in sorted(
+        players,
+        key=lambda x: (
+            PHASE_URGENCY.get((x.get("mv_curve") or {}).get("phase"), 9),
+            -(x.get("mv") or 0),
+        ),
+    ):
+        curve = p.get("mv_curve")
+        if not curve:
+            continue
+        who = f" | {owner_label(p)}" if owner_label else ""
+        rows.append(
+            f"| {p['n']} | {eur(p.get('mv'))} | {curve_describe(curve)}{who} |"
+        )
+    return rows
+
+
+def _value_curves(data: dict) -> str:
+    """My squad ordered by how close each player is to the top of his arc."""
+    header = ["| Player | Value | Curve |", "|---|---|---|"]
+    mine = _curve_rows(data["squad"])
+    if not mine:
+        return "_No market value histories available._"
+
+    # Market listings that are already rolling over: buying one means paying
+    # today's price for tomorrow's lower value.
+    cooling_market = sorted(
+        (p for p in data["market"] if (p.get("mv_curve") or {}).get("sell_window_closing")),
+        key=lambda p: -(p.get("mv") or 0),
+    )[:12]
+    out = ["**My squad** — sell the ones nearest the top of the curve first.", ""]
+    out += header + mine
+    if cooling_market:
+        out += [
+            "",
+            "**Market listings whose value is already topping out** — a bid here buys a falling asset.",
+            "",
+            "| Player | Value | Curve | Seller |",
+            "|---|---|---|---|",
+        ]
+        out += _curve_rows(
+            cooling_market, owner_label=lambda p: (p.get("u") or {}).get("n", "Kickbase")
+        )
+    return "\n".join(out)
+
+
 def _standings(ranking: dict) -> str:
     rows = ranking.get("us", [])
     lines = []
@@ -238,7 +325,11 @@ def _transfers_section(data: dict) -> str:
     return "\n".join(lines)
 
 
-def build_briefing(data: dict, now: datetime | None = None) -> str:
+def briefing_sections(data: dict, now: datetime | None = None) -> dict[str, tuple[str, str]]:
+    """Every part of the briefing, keyed so a stage can ask for just a few.
+
+    Returns key -> (heading, markdown body), in reading order.
+    """
     league = data["league"]
     budget = data["budget"].get("b")
     squad = data["squad"]
@@ -252,51 +343,137 @@ def build_briefing(data: dict, now: datetime | None = None) -> str:
     login_days = max(0, (deadline.date() - now.date()).days)
     login_bonus = login_days * DAILY_LOGIN_BONUS
 
-    return f"""# Kickbase Briefing — {league['n']}
+    sections: dict[str, tuple[str, str]] = {}
 
-## Time context
-- Now: {now.strftime('%A %d.%m.%Y %H:%M')}
+    sections["time"] = (
+        "Time context",
+        f"""- Now: {now.strftime('%A %d.%m.%Y %H:%M')}
 - **Budget deadline (first kickoff): {deadline.strftime('%A %d.%m.%Y %H:%M')}** — {hours_left:.0f}h from now
-- Expected daily login bonuses until then: {login_days} × 100k = **{eur(login_bonus)}** extra budget
+- Expected daily login bonuses until then: {login_days} × 100k = **{eur(login_bonus)}** extra budget""",
+    )
 
-## My situation
-- **Budget: {eur(budget)}** {"(NEGATIVE — must be ≥ 0 at the deadline above; afterwards it may go negative again)" if budget and budget < 0 else ""}
+    sections["me"] = (
+        "My situation",
+        f"""- **Budget: {eur(budget)}** {"(NEGATIVE — must be ≥ 0 at the deadline above; afterwards it may go negative again)" if budget and budget < 0 else ""}
 - Team value: {eur(team_value)}
 - Squad size: {len(squad)} players, {n_starters} confirmed in their club's predicted starting XI{f", {n_unknown} with no lineup published yet (unknown, not benched)" if n_unknown else ""}
-- Max players per user: {data['budget'].get('mppu', 15)}
+- Max players per user: {data['budget'].get('mppu', 15)}""",
+    )
 
-## League standings (season points)
-{_standings(data['ranking'])}
+    sections["standings"] = ("League standings (season points)", _standings(data["ranking"]))
 
-## Matchday projection — every manager's best possible XI
-Each rival's full squad is visible, so the same prediction model is run over
+    sections["projection"] = (
+        "Matchday projection — every manager's best possible XI",
+        f"""Each rival's full squad is visible, so the same prediction model is run over
 all of them. This is what the coming matchday looks like if everyone fields
 their strongest legal lineup. Managers with fewer than 11 players are charged
 −100 per empty slot.
 
-{_league_projection(data)}
+{_league_projection(data)}""",
+    )
 
-## My best legal XI right now
-{_my_xi(data)}
+    sections["my_xi"] = ("My best legal XI right now", _my_xi(data))
 
-## Strongest players owned by rivals (not buyable on the market)
-These are locked up unless the owner lists them or accepts a direct offer.
+    sections["rival_holdings"] = (
+        "Strongest players owned by rivals (not buyable on the market)",
+        f"""These are locked up unless the owner lists them or accepts a direct offer.
 Useful for knowing which rivals are strong where, and who to approach.
 
-{_rival_holdings(data)}
+{_rival_holdings(data)}""",
+    )
 
-## My squad
-(Sorted by predicted points. Δ = market value change. Status from ligainsider.de: injury flags and whether the player is in his club's predicted starting XI. Season history, Fixture and Predicted pts are explained under "Scoring & prediction model" below.)
+    sections["squad"] = (
+        "My squad",
+        f"""(Sorted by predicted points. "Curve" is where his market value sits on its arc — see "Value curves" below. Δ = market value change. Status from ligainsider.de: injury flags and whether the player is in his club's predicted starting XI. Season history, Fixture and Predicted pts are explained under "Scoring & prediction model".)
 
-{_squad_table(squad)}
+{_squad_table(squad)}""",
+    )
 
-## Transfer market ({len(data['market'])} listings)
-(Sorted by predicted points. Price = asking price. Players listed by "Kickbase" are blind auctions decided at the countdown; players listed by other managers are negotiations.)
+    sections["market"] = (
+        f"Transfer market ({len(data['market'])} listings)",
+        f"""(Sorted by predicted points. Price = asking price. Players listed by "Kickbase" are blind auctions decided at the countdown; players listed by other managers are negotiations.)
 
-{_market_table(data['market'])}
+{_market_table(data['market'])}""",
+    )
 
-## Scoring & prediction model
-Kickbase points a full-90 starter collects regardless of goals or actions:
+    sections["curves"] = (
+        "Value curves — the gradient, not the last delta",
+        f"""Market values move in arcs: a player gets noticed, the daily rises grow, then
+shrink, flatten and turn negative. The value peaks days before any single
+number in the table turns red, so the signal that matters is the *gradient* —
+today's daily rise measured against the rise he is coming from.
+
+"Curve" compares the last 3 days' average daily change with the 7 days before
+them. **cooling** means he is still rising but at less than half his previous
+pace: that is the top of the arc forming, and the moment to sell into strength.
+**topped out** means the rises have already stopped, **falling** means the
+decline has begun and every further day of holding costs money. **rising** and
+**accelerating** mean the climb is intact — hold, and keep collecting the daily
+updates. "turns in ~Nd" extrapolates the current deceleration to the day the
+rise reaches zero; it is a straight-line estimate, not a forecast, so treat 3
+days as "this week" and 12 days as "no rush".
+
+The percentage matters more than the euro figure: +40k/day on a 20M player is a
+stall, the same +40k on a 2M player is a steep climb.
+
+{_value_curves(data)}""",
+    )
+
+    sections["model"] = (
+        "Scoring & prediction model",
+        _model_explainer(),
+    )
+
+    sections["upside"] = (
+        "Role upside — players priced below the job they could take",
+        f"""A Kickbase player earns in two ways: points this weekend, and market value over
+the season. This table is only about the second. It compares a player against
+the team-mates he would have to displace at his own club: "Room" is what the
+club's established starters in his position are worth divided by his own value,
+so 2.0x means the market pays roughly double for that role at that club.
+
+Only players who are *not* currently first choice appear here — a starter has
+no role left to win. Treat a high "Room" as the size of the prize, not the
+likelihood: it says nothing about whether or when the manager plays him. The
+strongest version of this bet is a player the market already prices above his
+club's typical player while he has no scoring record at all, because that value
+is pure expectation and will re-rate fast if the role arrives.
+
+{_breakout_candidates(data)}""",
+    )
+
+    sections["transfers"] = (
+        "Recent league transfers (what competitors actually paid)",
+        _transfers_section(data),
+    )
+
+    sections["fixtures"] = (
+        "Next matches (predicted by ligainsider.de)",
+        _lineup_summary(data["lineups"]),
+    )
+
+    return sections
+
+
+def compose(sections: dict[str, tuple[str, str]], keys=None, title: str = "Kickbase Briefing") -> str:
+    """Render selected sections as one markdown document."""
+    chosen = keys or list(sections)
+    parts = [f"# {title}"]
+    for key in chosen:
+        if key not in sections:
+            continue
+        heading, body = sections[key]
+        parts.append(f"## {heading}\n{body}")
+    return "\n\n".join(parts) + "\n"
+
+
+def build_briefing(data: dict, now: datetime | None = None) -> str:
+    sections = briefing_sections(data, now)
+    return compose(sections, title=f"Kickbase Briefing — {data['league']['n']}")
+
+
+def _model_explainer() -> str:
+    return """Kickbase points a full-90 starter collects regardless of goals or actions:
 Startelf +5, minutes +10, **win +15 / draw 0 / loss −15**, and clean sheet
 (**GK +50, DEF +30, MID +20, FWD +10**). On top come goals (GK +120, DEF +100,
 MID +90, FWD +80), assists (GK +55, DEF +45, MID/FWD +35), yellow −10,
@@ -329,11 +506,4 @@ showing how this matchup compares to an average one.
 **Season history** gives starts/appearances and average per season, because a
 single ØPts number hides bench years and division changes — a player with
 Ø6 from five substitute appearances is a very different asset from a player
-with Ø6 across 30 starts.
-
-## Recent league transfers (what competitors actually paid)
-{_transfers_section(data)}
-
-## Next matches (predicted by ligainsider.de)
-{_lineup_summary(data['lineups'])}
-"""
+with Ø6 across 30 starts."""

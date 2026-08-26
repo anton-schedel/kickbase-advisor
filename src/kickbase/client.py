@@ -102,3 +102,8 @@ class KickbaseClient:
 
     def player_performance(self, league_id: str, player_id: str) -> dict:
         return self.get(f"/v4/leagues/{league_id}/players/{player_id}/performance")
+
+    def team_profile(self, team_id: str, competition_id: str = "1") -> dict:
+        """A club's full squad with values and start ratings — the basis for
+        comparing a player against the team-mates he would displace."""
+        return self.get(f"/v4/competitions/{competition_id}/teams/{team_id}/teamprofile")

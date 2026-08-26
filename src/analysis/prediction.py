@@ -54,6 +54,19 @@ START_PRIORS = {
 }
 SUB_MINUTES = 18  # typical minutes for someone coming off the bench
 
+# Kickbase's own starting-eleven likelihood (premium-only "prob" field), a 1-5
+# scale where 1 means nailed on. Validated against ligainsider's predicted XIs
+# over 57 players: levels 1-2 were 100% in the XI, level 3 was 62%, levels 4-5
+# were 0%. Mapped to (p_start, p_play) with the tails kept off 0 and 1, since
+# 57 observations cannot justify certainty.
+KICKBASE_START_PROB = {
+    1: (0.95, 0.97),
+    2: (0.87, 0.93),
+    3: (0.60, 0.78),
+    4: (0.12, 0.40),
+    5: (0.04, 0.15),
+}
+
 # A per-90 rate from a handful of substitute cameos is noise: someone who
 # scored 40 points in a 12-minute appearance is not a 300-point player. We
 # shrink every rate toward the positional median, with the prior carrying the
@@ -251,6 +264,7 @@ def predict(
     predicted_starter,
     injured: bool,
     prior: float | None = None,
+    start_prob: int | None = None,
 ) -> dict | None:
     """Expected points for the upcoming match."""
     if injured:
@@ -276,7 +290,12 @@ def predict(
     rate = shrunk_rate(profile, prior)
     confidence = "low" if profile["minutes"] < MIN_MINUTES_FOR_PRIOR else "ok"
 
-    if predicted_starter is None:  # no lineup published — fall back to history
+    if start_prob in KICKBASE_START_PROB:
+        # Kickbase's own rating is first-party and covers every player, so it
+        # takes precedence over the scraped lineup.
+        p_start, p_play = KICKBASE_START_PROB[start_prob]
+        note = None if start_prob <= 3 else "Kickbase rates him unlikely to start"
+    elif predicted_starter is None:  # no lineup published — fall back to history
         p_start, p_play = profile["start_rate"], profile["play_rate"]
         note = "no lineup published, using historical start rate"
     elif predicted_starter:
