@@ -9,7 +9,8 @@ from ligainsider.scraper import LigainsiderScraper
 from analysis.matching import map_teams, match_player
 from analysis.odds import match_outlook, expected_base_points, neutral_base_points
 from analysis.prediction import player_profile, predict, position_priors
-from analysis.lineup import best_xi
+from analysis.lineup import affordable_xi, best_xi
+from analysis.deadline import spendable_at_deadline
 from analysis.upside import squad_benchmarks, upside
 from analysis.momentum import value_curve
 
@@ -296,13 +297,25 @@ def collect(progress=print) -> dict:
     progress(f"Predictions: {predicted}/{len(all_players)} players")
 
     # Project the whole league: each manager's best legal XI for this matchday.
+    # Mine is the one I can actually field — a negative budget has to be cleared
+    # by kickoff, and an XI built on players I must sell is not a real lineup.
+    # Rival budgets are not visible, so theirs stay unconstrained; the briefing
+    # says so rather than pretending the comparison is exact.
+    spendable = spendable_at_deadline(budget.get("b"))
     for rival in rivals:
         players = squad if rival["is_me"] else rival["players"]
-        xi = best_xi(players)
+        xi = affordable_xi(players, spendable) if rival["is_me"] else best_xi(players)
         rival["xi"] = xi
         rival["projected_points"] = xi["total"]
         rival["team_value"] = sum(p.get("mv") or 0 for p in players)
         rival["squad_size"] = len(players)
+    if spendable < 0:
+        mine = next((r["xi"] for r in rivals if r["is_me"]), {})
+        sold = ", ".join(p["n"] for p in mine.get("sold", [])) or "nothing sellable"
+        progress(
+            f"Budget {spendable / 1e6:.2f}M at the deadline — affordable XI sells {sold} "
+            f"({mine.get('total', 0):.0f} pts vs {mine.get('unconstrained_total', 0):.0f} unconstrained)"
+        )
     rivals.sort(key=lambda r: -r["projected_points"])
     my_rank = next((i for i, r in enumerate(rivals, 1) if r["is_me"]), None)
     progress(f"League projection: you rank {my_rank}/{len(rivals)} for this matchday")

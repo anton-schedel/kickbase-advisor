@@ -91,6 +91,26 @@ def _pred_cell(p: dict) -> str:
     return f"<td class='num pred' title='{html.escape(title)}'>{pred['points']:.0f}{thin}</td>"
 
 
+def _forced_sales_note(xi: dict | None) -> str:
+    """Why the pitch is missing players you still own."""
+    if not xi:
+        return ""
+    if xi.get("unfundable"):
+        return (
+            f"<p class='note warnbox'>Budget is {eur_m(xi['deficit'])} short at kickoff and no "
+            "combination of sales clears it — this lineup is not fundable as it stands.</p>"
+        )
+    if not xi.get("sold"):
+        return ""
+    sold = ", ".join(f"{html.escape(p['n'])} ({eur_m(p.get('mv'))})" for p in xi["sold"])
+    return (
+        f"<p class='note warnbox'>Budget is {eur_m(xi['deficit'])} short at kickoff, so this XI "
+        f"already assumes you sell <strong>{sold}</strong> — the cheapest way out in points. "
+        f"Keeping everyone would project {xi['unconstrained_total']:.0f}, but that eleven cannot "
+        "be fielded.</p>"
+    )
+
+
 def _pitch(xi: dict | None) -> str:
     """Pre-match style lineup graphic: position lines drawn on a pitch."""
     if not xi:
@@ -376,6 +396,10 @@ td.rank {{ width: 1.8rem; color: var(--muted); font-variant-numeric: tabular-num
   color: var(--muted); margin-top: 6px; }}
 .muted {{ color: var(--muted); }}
 .note {{ color: var(--muted); font-size: .78rem; margin: -4px 0 8px; }}
+.note.warnbox {{
+  color: var(--ink); background: var(--highlight); border-left: 3px solid var(--amber);
+  padding: 8px 10px; margin: 0 0 10px; border-radius: 3px;
+}}
 td.status {{ text-align: right; font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }}
 .status.in {{ color: var(--green); font-weight: 700; }}
 .status.bench {{ color: var(--muted); }}
@@ -404,8 +428,9 @@ footer {{ margin-top: 40px; font-size: .74rem; color: var(--muted); }}
 </section>
 
 <h2>Best XI — matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
-<p class="note">Best legal lineup from the {len(squad)} players you own right now — transfers are suggested separately under Advice.
+<p class="note">The lineup you can actually field, from the players you own right now — transfers are suggested separately under Advice.
 Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</strong> = away match.</p>
+{_forced_sales_note(data.get("my_xi"))}
 {_pitch(data.get("my_xi"))}
 
 <h2>League projection</h2>

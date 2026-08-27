@@ -131,6 +131,9 @@ def describe(curve: dict | None) -> str:
         text += f", was {_per_day(curve['slope_prior'])}"
     if curve["days_to_turn"] is not None:
         text += f", turns in ~{curve['days_to_turn']}d"
-    if curve["off_peak_pct"] < -0.005:
+    # For anything in the sell window the distance from the peak is always
+    # shown, however small: it is what separates a 0.4% drift from a 26%
+    # collapse, and both otherwise carry the same one-word label.
+    if curve["days_since_peak"] and (curve["sell_window_closing"] or curve["off_peak_pct"] < -0.005):
         text += f", {curve['off_peak_pct'] * 100:.1f}% off {curve['days_since_peak']}d peak"
     return text

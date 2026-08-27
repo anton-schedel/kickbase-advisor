@@ -53,7 +53,11 @@ go negative again, because the lineup is locked by then. So plan the whole week:
 happen any time, forced sells only need to complete by the deadline.
 - **Daily login bonus**: I collect 100k per day. The briefing states how much accrues before \
 the deadline — include it in the budget math.
-- Selling to Kickbase pays exactly the current market value, instantly."""
+- Selling to Kickbase pays exactly the current market value, instantly.
+- **A bid reserves the cash the moment it is placed**, not when the auction settles. So a bid \
+can never be planned out of money that arrives later: the sale that funds it has to complete \
+first. This constrains the order of the whole week — check every buy against the budget as it \
+stands at the moment of bidding, not at kickoff, and say which sale pays for which bid."""
 
 
 CURVE_RULE = """- **Judge value moves by their gradient, not by the last delta.** The "Curve" column \
@@ -69,7 +73,15 @@ sold now, since waiting costs rather than earns. "turns in ~Nd" extrapolates the
 deceleration to the day the rise hits zero — a straight-line estimate, so read 3 days as \
 "this week" and 12 days as "no rush".
 - Judge the pace as a percentage of his value, not in euros: +40k/day on a 20M player is a \
-stall, the same +40k on a 2M player is a steep climb."""
+stall, the same +40k on a 2M player is a steep climb.
+- **Size the leak before acting on the label.** The phase words describe direction, not \
+magnitude. "topped out" at −0.14%/day and 0.4% below a three-day-old peak is a drift; \
+"falling" at −5%/day and 24% below a three-week-old peak is a collapse. Both wear a one-word \
+label, and they do not deserve the same response. Before selling on curve evidence, convert \
+the leak into euros per week and weigh that against what the player is worth to you — a \
+player leaking 300k a week is urgent, one leaking 40k a week is not.
+- **The curve rule is for momentum holdings, not for role bets** — see the role-upside rule \
+below when the two point in different directions."""
 
 
 UPSIDE_RULE = """- **A player can be worth holding for his value, not his points.** Predicted points answer \
@@ -80,6 +92,22 @@ check whether the player is on it. If he is, the question is not "he scores noth
 week" but "do I believe the role is coming, and can I afford to wait" — say which of the two \
 bets you are making. Selling a large-upside non-starter to fund a starter converts a long bet \
 into a short one: sometimes right (a hard deadline forces it), often wrong.
+- **A role bet is supposed to look flat.** A player on the Role upside table is not riding \
+community demand; he is waiting for a catalyst, and his value drifting sideways or slightly \
+down is the normal shape of that wait. Do not read his curve as if he were a momentum \
+holding: "topped out" on a prospect usually means the market is bored, which is exactly when \
+the bet is cheapest to keep. What ends a role bet is the **thesis breaking** — the club \
+buying or promoting somebody else into that role, a long injury, him falling out of the squad \
+entirely — or a real drawdown of many percent off his peak. A few days of small negative \
+updates is none of those things.
+- **If you sell a role-upside player on curve evidence, price the impatience.** State what \
+the current leak actually costs per week in euros, next to the size of the prize in the Room \
+column, so the trade is visible as a number rather than a feeling. "His value is falling" is \
+not an argument until you say how fast.
+- The market having already priced a prospect above his club's typical player is not proof \
+the upside is spent. That premium is what the Room column is measured against — it is the \
+evidence someone believes, not a ceiling. Say so if you argue otherwise, and explain what \
+would make the remaining Room unreachable.
 - When a sale is forced, prefer selling a player whose curve is flat or falling over one with \
 role upside, even if the flat player scores more this week."""
 
@@ -185,6 +213,14 @@ State the total cash the buy programme needs."""
 
 LINEUP_RULES = """Pick the starting XI I should field for this matchday.
 
+- **Only players I can still own at kickoff may appear in the XI.** If the budget is negative \
+it must be cleared by the first kickoff, and the briefing's "XI I can actually field" already \
+names the sale that costs the fewest points. A lineup containing a player I have to sell is \
+not a lineup. If you want to keep one of those players instead, you must name which other \
+players are sold in his place and show that the budget still reaches ≥ 0 — otherwise field \
+the affordable eleven.
+- Players I have not bought yet are not in the XI either. Give the lineup from the squad as \
+it stands first; then, separately, the lineup if the earlier stages' transfers land.
 - A valid lineup is 1 GK plus a sensible formation (3–5 DEF, 2–6 MID, 1–3 FWD): 4-4-2, 3-5-2, \
 4-3-3 and so on.
 - **Every empty slot costs −100 points**, so an XI is always eleven players — a 500k filler \
@@ -202,7 +238,8 @@ difference when the lower one has more secure minutes."""
 LINEUP_OUTPUT = """Output:
 
 **A. The XI** — formation, then the eleven players by line with their predicted points, and the \
-projected total.
+projected total. This is the affordable eleven: if a forced sale is in play, say which player \
+it costs me and what the lineup would have been without it.
 **B. The alternative I rejected** — the next-best lineup with its total, so the margin is visible.
 **C. Variance stance** — one short paragraph: am I protecting a lead or chasing, and which \
 specific rival, and how that shaped the picks.

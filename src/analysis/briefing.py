@@ -4,22 +4,12 @@ The briefing is built as named sections so the advisor can be run either as one
 big prompt or as focused stages that each receive only the sections they need.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
+from analysis.deadline import DAILY_LOGIN_BONUS, next_deadline
 from analysis.momentum import PHASE_URGENCY, describe as curve_describe, short as curve_short
 
-DAILY_LOGIN_BONUS = 100_000
-
-
-def next_deadline(now: datetime) -> datetime:
-    """First kickoff of the next matchday: Friday 20:30."""
-    days_ahead = (4 - now.weekday()) % 7  # 4 = Friday
-    candidate = (now + timedelta(days=days_ahead)).replace(
-        hour=20, minute=30, second=0, microsecond=0
-    )
-    if candidate <= now:
-        candidate += timedelta(days=7)
-    return candidate
+__all__ = ["briefing_sections", "build_briefing", "compose", "next_deadline"]
 
 
 def eur(value) -> str:
@@ -165,6 +155,11 @@ def _league_projection(data: dict) -> str:
             notes.append(f"**{xi['empty_slots']} empty slot(s) = {xi['empty_slots'] * -100} pts**")
         if r["is_me"]:
             notes.append("← you")
+            if xi.get("sold"):
+                notes.append(
+                    f"after the forced sale of {', '.join(p['n'] for p in xi['sold'])}; "
+                    f"{xi['unconstrained_total']:.0f} if the budget allowed"
+                )
         lines.append(
             f"| {rank} | {r['name']} | **{r['projected_points']:.0f}** | {xi.get('formation', '?')} "
             f"| {r['squad_size']} | {eur(r['team_value'])} | {', '.join(notes)} |"
@@ -200,8 +195,25 @@ def _my_xi(data: dict) -> str:
     xi = data.get("my_xi")
     if not xi:
         return "_No lineup computed._"
-    lines = [f"Best legal XI from my current squad: **{xi['formation']}**, "
-             f"projected **{xi['total']:.0f}** points"]
+    lines = [f"XI I can actually field: **{xi['formation']}**, projected **{xi['total']:.0f}** points"]
+
+    if xi.get("unfundable"):
+        lines.append(
+            f"⚠ **No combination of sales clears the {eur(xi['deficit'])} deficit**, so this XI "
+            "is not fundable as it stands — the budget has to come from somewhere else."
+        )
+    elif xi.get("sold"):
+        sold = ", ".join(f"{p['n']} ({eur(p.get('mv'))})" for p in xi["sold"])
+        lines.append(
+            f"The budget is **{eur(xi['deficit'])} short** at kickoff, so this lineup already "
+            f"assumes the cheapest way out in points terms: **sell {sold}** — "
+            f"{eur(xi.get('raised'))} raised, which clears the deficit. "
+            f"Keeping everyone would project {xi['unconstrained_total']:.0f} points, but that "
+            "eleven cannot be fielded, because the budget must be ≥ 0 at the first kickoff. "
+            "Any other way of clearing the deficit — buying nothing and selling different "
+            "players, or winning cheaper replacements first — scores less than this unless it "
+            "brings in new players."
+        )
     if xi.get("empty_slots"):
         lines.append(f"⚠ {xi['empty_slots']} slot(s) cannot be filled — that is {xi['empty_slots'] * -100} points.")
     lines.append("")
@@ -258,8 +270,16 @@ def _curve_rows(players: list[dict], owner_label=None) -> list[str]:
         if not curve:
             continue
         who = f" | {owner_label(p)}" if owner_label else ""
+        # A prospect waiting for a role is meant to look flat, so his curve
+        # must not be read as a momentum signal.
+        note = ""
+        if (p.get("upside") or {}).get("is_candidate"):
+            note = (
+                f" — role bet ({p['upside']['upside_ratio']:.1f}x room), so a flat or "
+                "drifting curve is the expected wait, not a sell signal"
+            )
         rows.append(
-            f"| {p['n']} | {eur(p.get('mv'))} | {curve_describe(curve)}{who} |"
+            f"| {p['n']} | {eur(p.get('mv'))} | {curve_describe(curve)}{note}{who} |"
         )
     return rows
 
@@ -368,6 +388,11 @@ def briefing_sections(data: dict, now: datetime | None = None) -> dict[str, tupl
 all of them. This is what the coming matchday looks like if everyone fields
 their strongest legal lineup. Managers with fewer than 11 players are charged
 −100 per empty slot.
+
+My own row is the XI I can actually field: if the budget is negative it already
+subtracts the players I must sell to be ≥ 0 at kickoff. Rival budgets are not
+visible, so their rows assume no forced sales — a rival deep in deficit will
+score less than his row suggests.
 
 {_league_projection(data)}""",
     )
