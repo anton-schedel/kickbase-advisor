@@ -75,7 +75,26 @@ def _value(player: dict) -> float:
     return player.get("mv") or 0.0
 
 
-def affordable_xi(players: list[dict], budget: float) -> dict:
+def sale_proceeds(player: dict, value_updates: int = 0) -> float:
+    """What selling this player raises, at the best moment before the deadline.
+
+    A forced sale does not have to happen today — it has to happen before
+    kickoff, and the nightly updates in between move the price. So a rising
+    player is worth selling after them and a falling one before, and the
+    proceeds are whichever is higher. Pricing every sale at today's value is
+    what makes a cheap way out look 200k short when it is not.
+
+    An injured player's curve is not trusted: his value reflects a market that
+    has not repriced the news yet, so he is valued as he stands today.
+    """
+    value = _value(player)
+    curve = player.get("mv_curve")
+    if not value or not curve or not value_updates or player.get("injury"):
+        return value
+    return max(value, value + curve["slope_recent"] * value_updates)
+
+
+def affordable_xi(players: list[dict], budget: float, value_updates: int = 0) -> dict:
     """The best XI still fieldable after clearing a budget deficit.
 
     A negative budget must be cleared by kickoff, and the only certain way to
@@ -98,12 +117,12 @@ def affordable_xi(players: list[dict], budget: float) -> dict:
     best = None
     for size in range(1, min(MAX_FORCED_SALES, len(players)) + 1):
         for combo in combinations(players, size):
-            raised = sum(_value(p) for p in combo)
+            raised = sum(sale_proceeds(p, value_updates) for p in combo)
             if raised < deficit:
                 continue
             # Only minimal sets are worth evaluating: dropping a player from a
             # set that already clears the deficit can only improve the XI.
-            if size > 1 and raised - max(_value(p) for p in combo) >= deficit:
+            if size > 1 and raised - max(sale_proceeds(p, value_updates) for p in combo) >= deficit:
                 continue
             remaining = [p for p in players if p not in combo]
             candidate = best_xi(remaining)

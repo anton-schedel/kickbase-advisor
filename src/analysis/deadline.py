@@ -30,3 +30,24 @@ def spendable_at_deadline(budget: float | None, now: datetime | None = None) -> 
     """Budget as it will stand at kickoff if nothing is bought or sold."""
     now = now or datetime.now()
     return (budget or 0) + login_bonus_before(next_deadline(now), now)
+
+
+# Market values update daily at about this hour.
+VALUE_UPDATE_HOUR = 22
+
+
+def value_updates_before(deadline: datetime, now: datetime) -> int:
+    """How many nightly value updates land between now and the deadline.
+
+    A player sold before the deadline can be sold *after* those updates, so
+    this is what a rising player is really worth as budget — pricing a forced
+    sale at today's value understates it and can rule out the cheap way out.
+    """
+    count = 0
+    stamp = now.replace(hour=VALUE_UPDATE_HOUR, minute=0, second=0, microsecond=0)
+    if stamp <= now:
+        stamp += timedelta(days=1)
+    while stamp < deadline:
+        count += 1
+        stamp += timedelta(days=1)
+    return count

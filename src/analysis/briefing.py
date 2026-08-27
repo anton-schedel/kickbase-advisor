@@ -207,7 +207,11 @@ def _my_xi(data: dict) -> str:
         lines.append(
             f"The budget is **{eur(xi['deficit'])} short** at kickoff, so this lineup already "
             f"assumes the cheapest way out in points terms: **sell {sold}** — "
-            f"{eur(xi.get('raised'))} raised, which clears the deficit. "
+            f"{eur(xi.get('raised'))} raised, which clears the deficit. Those proceeds are "
+            "priced at the deadline, not today: a rising player is sold after the nightly "
+            "22:00 updates that still land before kickoff, which is worth more than selling "
+            "him now. An injured player is priced as he stands, because his curve has not "
+            "repriced the news yet. "
             f"Keeping everyone would project {xi['unconstrained_total']:.0f} points, but that "
             "eleven cannot be fielded, because the budget must be ≥ 0 at the first kickoff. "
             "Any other way of clearing the deficit — buying nothing and selling different "

@@ -54,6 +54,12 @@ happen any time, forced sells only need to complete by the deadline.
 - **Daily login bonus**: I collect 100k per day. The briefing states how much accrues before \
 the deadline — include it in the budget math.
 - Selling to Kickbase pays exactly the current market value, instantly.
+- **A forced sale is priced at the deadline, not today.** Every nightly 22:00 update that \
+lands before kickoff still counts, so a rising player sold late raises more than the table \
+says and a falling one raises less. Check whether a sale that looks a few hundred k short \
+today clears comfortably after tonight's update before ruling it out — and never sell a \
+rising player before an update you could have waited for. The exception is an injured player: \
+his curve has not repriced the news, so do not count on it.
 - **A bid reserves the cash the moment it is placed**, not when the auction settles. So a bid \
 can never be planned out of money that arrives later: the sale that funds it has to complete \
 first. This constrains the order of the whole week — check every buy against the budget as it \

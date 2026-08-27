@@ -10,7 +10,7 @@ from analysis.matching import map_teams, match_player
 from analysis.odds import match_outlook, expected_base_points, neutral_base_points
 from analysis.prediction import player_profile, predict, position_priors
 from analysis.lineup import affordable_xi, best_xi
-from analysis.deadline import spendable_at_deadline
+from analysis.deadline import next_deadline, spendable_at_deadline, value_updates_before
 from analysis.upside import squad_benchmarks, upside
 from analysis.momentum import value_curve
 
@@ -302,9 +302,13 @@ def collect(progress=print) -> dict:
     # Rival budgets are not visible, so theirs stay unconstrained; the briefing
     # says so rather than pretending the comparison is exact.
     spendable = spendable_at_deadline(budget.get("b"))
+    # A forced sale can wait for the nightly updates that still land before
+    # kickoff, so proceeds are priced there rather than at today's value.
+    now = datetime.now()
+    updates = value_updates_before(next_deadline(now), now)
     for rival in rivals:
         players = squad if rival["is_me"] else rival["players"]
-        xi = affordable_xi(players, spendable) if rival["is_me"] else best_xi(players)
+        xi = affordable_xi(players, spendable, updates) if rival["is_me"] else best_xi(players)
         rival["xi"] = xi
         rival["projected_points"] = xi["total"]
         rival["team_value"] = sum(p.get("mv") or 0 for p in players)
