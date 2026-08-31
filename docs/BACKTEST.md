@@ -114,3 +114,122 @@ career average are archived each run and scored against real results.
 4. **Do not switch to recent-form averages** — measurably worse.
 5. **The odds component is the open question.** Predictions are archived from
    now on so it can be scored against real results after each matchday.
+
+## Matchday 1, 2026/27 — the first real forward test
+
+The walk-forward backtest could never measure the odds-driven half of the model,
+because the API only carries bookmaker odds for upcoming matches. Matchday 1,
+scored complete, is the first settlement against real results — using the last
+forecast made before the Friday deadline.
+
+| | MAE | scored on |
+|---|---|---|
+| **Model** | **40.7** | 34 |
+| ØPts baseline | 49.6 | 34 |
+| 50/50 blend | 43.2 | 34 |
+
+The model beats a career average by 9 points of MAE, 18%. That reverses what
+the historical backtest found, and the reason is instructive.
+
+### The scoring method decided the answer
+
+An earlier pass over this same matchday had the model *losing* at 50.4 against
+the baseline's 46.1. Two flaws produced that:
+
+**Players who never appeared were dropped.** Nine of the 44 were not in their
+club's squad at all. In the data that is indistinguishable from "not played
+yet" — no entry for the matchday — so the scorer skipped them. But the matchday
+was over: their real outcome was zero, and a forecast that said otherwise was
+wrong. Excluding them scores only the players who happened to appear, which
+systematically flatters any model that over-predicts non-players.
+
+That is precisely where the model earns its advantage. On those nine, the model
+averaged 12.2 points of error; the ØPts baseline averaged **75.2**, because a
+career average has no idea whether a player is in the squad. Restricted to
+players who did appear, the three methods are within two points of each other
+(model 44.5, baseline 46.1, blend 43.2). **The model's entire edge is knowing
+who will not play.**
+
+**The baselines were scored on different players.** A player with no season
+history has no ØPts number, so the model was being averaged over 44 players and
+the baseline over 34. Every comparison now runs on the same set.
+
+### Where the remaining error comes from
+
+Splitting by whether the selection call was right:
+
+| Call | n | MAE |
+|---|---|---|
+| Selection right | 23 | 42.6 |
+| Selection wrong | 9 | 66.9 |
+| — of which "said start, benched" | 3 | 94.4 |
+
+Selection is both the model's strength and its largest remaining weakness.
+
+### Substitutes are a lottery, not an underestimate
+
+Twelve players came off the bench. The mean signed error says the model
+under-predicts them; the median says the opposite, and the median is right:
+
+- Ten of twelve scored **less** than predicted — median error +30 (over-predicted)
+- The other two returned **180** (35 min) and **238** (30 min, two goals)
+
+Usually a small disappointment, occasionally an enormous return. Raising bench
+forecasts would make the typical case worse; the answer is an honestly shaped
+range, not a higher point estimate.
+
+### The range was the real defect
+
+Ranges bracketed the true score **16%** of the time, against the ~60% a
+20th-to-80th percentile band should manage. Two holes caused it:
+
+- A player with no Bundesliga record got **no range at all**, displayed as 0–0 —
+  maximum apparent confidence exactly where the model knew least.
+- Bench players were excluded by a `p_start > 0.5` gate, precisely the group
+  with the fat tail.
+
+The range is now two explicit scenarios rather than a band around the estimate,
+because for most players the uncertainty is not "how well does he play" but
+"does he play at all": the floor is a substitute never coming on, the ceiling is
+starting and producing at his 80th percentile. Players with no record borrow the
+positional spread instead of showing none.
+
+**Coverage on the same matchday: 16% → 57%**, against a theoretical 60. The
+overconfidence is gone. MAE was unchanged (42.6 → 42.4) — this fixed the
+model's honesty, not its accuracy.
+
+### Market value carries information the record cannot
+
+Within each position, log market value correlates with per-90 action output:
+
+| Position | correlation | n |
+|---|---|---|
+| MID | +0.73 | 34 |
+| FWD | +0.47 | 24 |
+| GK | +0.42 | 13 |
+| DEF | +0.39 | 31 |
+
+Top-quartile midfielders produce roughly twice the per-90 output of
+bottom-quartile ones. A price encodes reputation, fee and expectation that an
+appearance record cannot yet show — which matters most for the player the model
+is blindest to: a big signing with no minutes. A thin record is now shrunk
+toward what a player *at that price* produces, rather than toward the same
+number for a 30M international and a 500k reserve. The effect on points is
+small; it is a value signal more than a points one.
+
+### League projection
+
+Scored complete, against what the nine managers actually banked:
+
+| | |
+|---|---|
+| MAE | 118 points on an 857 average (**14%**) |
+| Pairwise ranking correct | 26/36 (**72%**) |
+| Mean signed error | **+103** — the projection under-shoots |
+
+The top call was right: AlexG projected first, finished first. The systematic
+under-projection is a direct consequence of shrinkage — every individual
+forecast is pulled toward the positional mean, and summing eleven conservative
+forecasts compounds into a conservative team total. It does not distort the
+ranking, which is what the projection is actually used for, so it is left alone
+rather than fitted away on one matchday of evidence.

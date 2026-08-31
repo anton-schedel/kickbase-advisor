@@ -18,6 +18,7 @@ fixture part carries the matchup. That is what makes a strong player in a
 brutal away game rank below a modest player at home to a weak side.
 """
 
+import math
 import statistics
 
 from analysis.odds import CLEAN_SHEET_POINTS, WIN_POINTS, LOSS_POINTS
@@ -53,6 +54,7 @@ START_PRIORS = {
     False: (0.12, 0.50),  # published lineup, he is not in it
 }
 SUB_MINUTES = 18  # typical minutes for someone coming off the bench
+FULL_MATCH_MINUTES = 85  # a start, allowing for the usual late substitution
 
 # Kickbase's own starting-eleven likelihood (premium-only "prob" field), a 1-5
 # scale where 1 means nailed on. Validated against ligainsider's predicted XIs
@@ -237,6 +239,87 @@ def position_priors(profiles: list[tuple[str, dict | None]]) -> dict[str, float]
     return priors
 
 
+# A thin record is shrunk toward "what this position normally produces", which
+# is the same number for a 30M international and a 500k reserve. The market
+# disagrees, and it is right to: value correlates with per-90 output at every
+# position (+0.4 to +0.7 on log value in this league's pool), because a price
+# encodes reputation, transfer fee and expectation that no appearance record
+# can show yet. So the baseline a player is pulled toward is set by his price.
+#
+# This matters most exactly where the points model is blindest: a big signing
+# with no league record. Giving him the positional average guarantees an
+# unremarkable forecast and hides the players whose value is about to move.
+MIN_SAMPLES_FOR_VALUE_PRIOR = 8
+# The fit is only allowed to move the baseline this far, so one outlier or a
+# thin position cannot produce an absurd prior.
+VALUE_PRIOR_BOUNDS = (0.6, 1.8)
+
+
+def position_spreads(profiles: list[tuple[str, dict | None]]) -> dict[str, tuple[float, float]]:
+    """How far above and below his own average a typical player at each position
+    swings, as per-90 offsets.
+
+    A player with no Bundesliga record has no percentiles of his own, so without
+    this he was shown with no range at all — maximum apparent confidence exactly
+    where the model knows least.
+    """
+    by_position: dict[str, list[tuple[float, float]]] = {}
+    for position, profile in profiles:
+        spread = (profile or {}).get("spread")
+        if profile and spread and profile["minutes"] >= MIN_MINUTES_FOR_PRIOR:
+            own = profile["residual_per90_raw"]
+            by_position.setdefault(position, []).append((spread[0] - own, spread[1] - own))
+    return {
+        position: (
+            statistics.median(low for low, _ in offsets),
+            statistics.median(high for _, high in offsets),
+        )
+        for position, offsets in by_position.items()
+        if len(offsets) >= 3
+    }
+
+
+def value_priors(samples: list[tuple[str, dict | None, float | None]]) -> dict[str, tuple[float, float]]:
+    """Per position, how per-90 output varies with log market value.
+
+    Returns position -> (slope, median log value), fitted by least squares over
+    players with enough minutes to trust. Positions with too few samples are
+    absent, and the caller falls back to the flat positional prior.
+    """
+    by_position: dict[str, list[tuple[float, float]]] = {}
+    for position, profile, value in samples:
+        if profile and value and profile["minutes"] >= MIN_MINUTES_FOR_PRIOR:
+            by_position.setdefault(position, []).append(
+                (math.log(value), profile["residual_per90_raw"])
+            )
+
+    fitted = {}
+    for position, points in by_position.items():
+        if len(points) < MIN_SAMPLES_FOR_VALUE_PRIOR:
+            continue
+        xs = [x for x, _ in points]
+        ys = [y for _, y in points]
+        mx, my = statistics.fmean(xs), statistics.fmean(ys)
+        variance = sum((x - mx) ** 2 for x in xs)
+        if variance <= 0:
+            continue
+        slope = sum((x - mx) * (y - my) for x, y in points) / variance
+        fitted[position] = (slope, statistics.median(xs))
+    return fitted
+
+
+def prior_for(position: str, value: float | None, priors: dict, value_model: dict) -> float:
+    """The per-90 baseline this player is shrunk toward, adjusted for his price."""
+    flat = priors.get(position, FALLBACK_PRIORS.get(position, 55.0))
+    fit = value_model.get(position)
+    if not fit or not value:
+        return flat
+    slope, median_log = fit
+    adjusted = flat + slope * (math.log(value) - median_log)
+    low, high = VALUE_PRIOR_BOUNDS
+    return min(max(adjusted, flat * low), flat * high)
+
+
 def _shrink(observed: float, minutes: float, prior: float, weight: float = RATE_SHRINKAGE_MINUTES) -> float:
     """Pull a per-90 rate toward a baseline in proportion to how thin the sample is."""
     return (minutes * observed + weight * prior) / (minutes + weight)
@@ -265,6 +348,7 @@ def predict(
     injured: bool,
     prior: float | None = None,
     start_prob: int | None = None,
+    position_spread: tuple[float, float] | None = None,
 ) -> dict | None:
     """Expected points for the upcoming match."""
     if injured:
@@ -354,20 +438,45 @@ def predict(
         notes.append(f"only {profile['matches']} apps — shrunk toward baseline")
     if notes:
         result["note"] = "; ".join(notes)
+    # The range is two explicit scenarios rather than a band around the
+    # estimate, because for most players the uncertainty is not "how well does
+    # he play" but "does he play at all". A substitute's honest floor is that
+    # he never comes on; his ceiling is that he starts and produces. Matchday 1
+    # showed why this matters: two bench players returned 180 and 238 points
+    # while the model was showing them no range whatsoever.
     spread = profile.get("spread")
-    if spread and p_start > 0.5:
-        # Same structure as the prediction — fixture and goal parts held fixed,
-        # the player's own 20th/80th percentile action output varying. The
-        # percentiles are measured on his raw rate, so shift them by the same
-        # amount shrinkage moved the estimate, keeping the spread centred on
-        # the rate actually used.
-        floor = result["fixture_part"] + goal_points
-        scale = expected_minutes / 90
+    if not spread and position_spread:
+        low_offset, high_offset = position_spread
+        own = profile["residual_per90_raw"]
+        spread = (own + low_offset, own + high_offset)
+
+    if spread:
         offset = rate - profile["residual_per90_raw"]
-        result["low"] = floor + (spread[0] + offset) * scale
-        result["high"] = floor + (spread[1] + offset) * scale
-        # A skewed history can still leave the estimate outside its own
-        # percentiles; the range must always contain the prediction.
+        rate_low, rate_high = spread[0] + offset, spread[1] + offset
+
+        def scenario(minutes: float, played_rate: float) -> float:
+            if minutes <= 0:
+                return 0.0
+            started = minutes >= 60
+            blocks_s = minutes / 10
+            appearance_s = STARTING_XI_BONUS if started else SUB_BONUS
+            minute_s = blocks_s + (1.0 if started else 0.0)
+            result_s = WIN_POINTS * outlook["p_win"] + LOSS_POINTS * outlook["p_loss"]
+            cs_s = outlook["p_clean_sheet"] * cs_rate * (blocks_s + (1.0 if started else 0.0))
+            skill_s = played_rate * minutes / 90
+            goals_s = (goal_rate * minutes / 90 * attack_factor) * GOAL_POINTS.get(position, 0)
+            assists_s = (assist_rate * minutes / 90 * attack_factor) * ASSIST_POINTS.get(position, 0)
+            return appearance_s + minute_s + result_s + cs_s + skill_s + goals_s + assists_s
+
+        if p_start >= 0.85:
+            result["low"] = scenario(FULL_MATCH_MINUTES, rate_low)
+        elif p_play >= 0.9:
+            result["low"] = scenario(SUB_MINUTES, rate_low)
+        else:
+            result["low"] = 0.0  # he may simply not appear
+        result["high"] = scenario(FULL_MATCH_MINUTES, rate_high)
+
+        # The range must always contain the estimate it brackets.
         result["low"] = min(result["low"], total)
         result["high"] = max(result["high"], total)
     return result

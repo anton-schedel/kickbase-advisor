@@ -39,11 +39,17 @@ def render_latest(project_root: Path) -> Path:
         else:
             advice_md = "_No advice generated yet._"
 
+    # The dashboard shows its own report card when a matchday has been scored.
+    results = None
+    results_files = sorted((project_root / "data" / "results").glob("md*.json"))
+    if results_files:
+        results = json.loads(results_files[-1].read_text())
+
     data = json.loads(data_file.read_text())
     generated_at = datetime.strptime(stamp, "%Y-%m-%d_%H%M%S")
     out = project_root / "docs" / "index.html"
     out.parent.mkdir(exist_ok=True)
-    out.write_text(build_site(data, advice_md, generated_at))
+    out.write_text(build_site(data, advice_md, generated_at, results))
     return out
 
 

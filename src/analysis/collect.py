@@ -8,7 +8,14 @@ from kickbase.client import KickbaseClient
 from ligainsider.scraper import LigainsiderScraper
 from analysis.matching import map_teams, match_player
 from analysis.odds import match_outlook, expected_base_points, neutral_base_points
-from analysis.prediction import player_profile, predict, position_priors
+from analysis.prediction import (
+    player_profile,
+    predict,
+    position_priors,
+    position_spreads,
+    prior_for,
+    value_priors,
+)
 from analysis.lineup import affordable_xi, best_xi
 from analysis.deadline import next_deadline, spendable_at_deadline, value_updates_before
 from analysis.upside import squad_benchmarks, upside
@@ -278,7 +285,17 @@ def collect(progress=print) -> dict:
     # Baselines come from the league's own well-sampled players, so a thin
     # record gets pulled toward what that position normally produces.
     priors = position_priors([(p["position"], p.get("profile")) for p in all_players])
+    # Market value carries information no appearance record can: a big signing
+    # with no minutes is not an average player at his position, and the market
+    # prices that before the pitch shows it.
+    value_model = value_priors([(p["position"], p.get("profile"), p.get("mv")) for p in all_players])
+    spreads = position_spreads([(p["position"], p.get("profile")) for p in all_players])
     progress("Baseline pts/90 per position: " + ", ".join(f"{k} {v:.0f}" for k, v in sorted(priors.items())))
+    if value_model:
+        progress(
+            "Value adjustment per log-€: "
+            + ", ".join(f"{k} {s:+.0f}" for k, (s, _) in sorted(value_model.items()))
+        )
 
     predicted = 0
     for player in all_players:
@@ -288,7 +305,8 @@ def collect(progress=print) -> dict:
             player["position"],
             player.get("predicted_starter"),
             injured=bool(player.get("injury")),
-            prior=priors.get(player["position"]),
+            prior=prior_for(player["position"], player.get("mv"), priors, value_model),
+            position_spread=spreads.get(player["position"]),
             # Premium-only: Kickbase's own 1-5 starting likelihood. Absent on
             # rival squads, which fall back to the scraped lineup.
             start_prob=player.get("prob"),

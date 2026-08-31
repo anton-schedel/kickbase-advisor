@@ -54,6 +54,10 @@ def archive_predictions(project_root: Path, stamp: str, data: dict) -> None:
                     else None
                 ),
                 "expected_goals": round(prediction.get("expected_goals") or 0, 3),
+                # Archived so the range can be scored too: a forecast that says
+                # how uncertain it is should be judged on that as well.
+                "low": prediction.get("low"),
+                "high": prediction.get("high"),
                 "predicted_starter": player.get("predicted_starter"),
                 "p_win": (player.get("fixture") or {}).get("p_win"),
             }

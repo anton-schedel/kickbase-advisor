@@ -1,6 +1,7 @@
 """Render the latest briefing data + advice into a static single-file page."""
 
 import html
+import re
 from datetime import datetime
 
 import markdown
@@ -89,6 +90,79 @@ def _pred_cell(p: dict) -> str:
     if pred.get("note"):
         title += f" — {pred['note']}"
     return f"<td class='num pred' title='{html.escape(title)}'>{pred['points']:.0f}{thin}</td>"
+
+
+def _scored_label(results: dict) -> str:
+    """Players scored, and how many the baselines could be compared on.
+
+    A player with no season history has no ØPts number, so the baseline columns
+    cover fewer players than the model does — worth saying rather than implying
+    all three ran on the same 44.
+    """
+    scored = results.get("scored")
+    compared = results.get("compared_on")
+    if compared and compared != scored:
+        return f"{scored}<span class='scsub'>{compared} compared</span>"
+    return str(scored)
+
+
+def _scorecard(results: dict | None) -> str:
+    """How the last matchday's forecasts actually turned out.
+
+    A prediction nobody checks afterwards is a horoscope, so the page carries
+    its own report card — including the baseline it has to beat.
+    """
+    if not results:
+        return ""
+    hits, total = results.get("range_hits", 0), results.get("range_total", 0)
+    # Predictions archived before ranges were stored have nothing to score, so
+    # the tile is left out rather than shown empty.
+    coverage = f"{hits / total * 100:.0f}%" if total else None
+    best = min(
+        (v for v in (results.get("model_mae"), results.get("naive_mae"), results.get("blend_mae")) if v),
+        default=None,
+    )
+
+    def cell(label: str, value, unit: str = "") -> str:
+        if value is None:
+            return ""
+        win = " win" if best is not None and value == best and unit else ""
+        return (
+            f"<div class='sc'><div class='sclabel'>{label}</div>"
+            f"<div class='scnum{win}'>{value}{unit}</div></div>"
+        )
+
+    misses = "".join(
+        f"<tr><td class='name'>{html.escape(m['name'])}"
+        f"<span class='sub'>{m['minutes']} min played</span></td>"
+        f"<td class='num'>{m['predicted']}</td>"
+        f"<td class='num pred'>{m['actual']}</td>"
+        f"<td class='num {'up' if m['actual'] > m['predicted'] else 'down'}'>"
+        f"{m['actual'] - m['predicted']:+d}</td></tr>"
+        for m in results.get("misses", [])
+    )
+    pending = results.get("pending") or 0
+    caveat = (
+        f"<p class='note warnbox'>Incomplete — {pending} more players from this matchday "
+        "have not kicked off yet, so every number here can still move.</p>"
+        if pending
+        else ""
+    )
+    return f"""<h2>Model check — matchday {results.get('matchday')}</h2>
+<p class="note">Average error per player against what they really scored, on the last forecast
+made before kickoff. Lower is better; the baselines are what the model has to beat.</p>
+{caveat}
+<div class="scorecard">
+{cell("Model", results.get("model_mae"), " MAE")}
+{cell("ØPts baseline", results.get("naive_mae"), " MAE")}
+{cell("50/50 blend", results.get("blend_mae"), " MAE")}
+{cell("Range held", coverage)}
+{cell("Players", _scored_label(results))}
+</div>
+<div class="tablewrap"><table class="data">
+<tr class="hdr"><th>Biggest misses</th><th class="num">said</th><th class="num">scored</th><th class="num">off by</th></tr>
+{misses}
+</table></div>"""
 
 
 def _forced_sales_note(xi: dict | None) -> str:
@@ -256,7 +330,116 @@ def _deadline_block(data: dict, generated_at: datetime) -> str:
     )
 
 
-def build_site(data: dict, advice_md: str, generated_at: datetime) -> str:
+# Occasionally a stage opens by narrating how it is answering rather than
+# answering. The prompts now forbid it; this catches the archives written
+# before that, and can be deleted once none are left on the page.
+NARRATION_RE = re.compile(
+    r"\A.{0,300}?(?:no skill applies|using no skill|advisory read|not a code task)"
+    r".*?(?:\n\s*\n|\Z)",
+    re.IGNORECASE | re.DOTALL,
+)
+SUBHEADING_RE = re.compile(r"^#{1,4}\s+", re.MULTILINE)
+
+
+def _clean_stage_body(body: str, title: str) -> str:
+    words = re.sub(r"[^\w\s]", " ", title.lower()).split()
+
+    def repeats_title(line: str) -> bool:
+        text = re.sub(r"[^\w\s]", " ", line.lower())
+        return all(word in text for word in words)
+
+    kept = [
+        line
+        for line in body.splitlines()
+        # A heading that restates the section title shows it twice, with or
+        # without an "A." prefix or a date glued on the end.
+        if not (line.lstrip().startswith("#") and repeats_title(line))
+    ]
+    body = "\n".join(kept).strip()
+
+    body = NARRATION_RE.sub("", body, count=1)
+    # Everything a stage emitted is a sub-part of this section. The "A. / B. /
+    # C." lettering is scaffolding from the output spec and means nothing to a
+    # reader, so the label stands on its own — numbers stay, because those
+    # enumerate real things like the buy targets.
+    body = re.sub(r"^(#{1,3})\s+[A-Z]\.\s+", r"\1 ", body.strip(), flags=re.MULTILINE)
+    return re.sub(r"^#{1,3}\s+", "#### ", body, flags=re.MULTILINE)
+
+
+SECTION_RE = re.compile(r"^##\s+\d+\.\s+(.+?)\s*$", re.MULTILINE)
+
+
+def _advice_parts(advice_md: str) -> list[tuple[str, str]]:
+    """Split the assembled advice into its numbered sections.
+
+    Each stage writes its own "A. / B. / C." headings, which markdown renders at
+    the same level as the page's own section headers — so a sub-part of the buy
+    pass looked exactly as important as the squad table. Here the numbered
+    sections become the structure and everything inside them is demoted to sit
+    under it, including the stray title a stage sometimes repeats at the top.
+    """
+    matches = list(SECTION_RE.finditer(advice_md))
+    if not matches:
+        return [("Advice", advice_md)]
+
+    parts = []
+    for i, match in enumerate(matches):
+        title = match.group(1)
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(advice_md)
+        body = _clean_stage_body(advice_md[match.end():end].strip(), title)
+        parts.append((title, body))
+    return parts
+
+
+def _advice_html(advice_md: str) -> str:
+    """The advice as collapsible sections, the plan open and the detail folded.
+
+    Twenty thousand characters of reasoning is the right amount to have and the
+    wrong amount to scroll past on a phone, so only the week's plan is open.
+    """
+    if not advice_md.strip():
+        return "<p class='muted'>No advice generated yet.</p>"
+
+    blocks = []
+    for index, (title, body) in enumerate(_advice_parts(advice_md)):
+        inner = markdown.markdown(body, extensions=["tables"])
+        inner = inner.replace("<table>", "<div class='tablewrap'><table>")
+        inner = inner.replace("</table>", "</table></div>")
+        # The first section is the reconciled plan; the rest are the individual
+        # passes it was built from. Publishing them as equals put a superseded
+        # verdict next to the final one with nothing to tell them apart.
+        if index:
+            inner = (
+                "<p class='supersede'>One pass's reasoning, before the plan reconciled "
+                "them. Where this differs from the plan, the plan wins.</p>" + inner
+            )
+        label = title if index == 0 else f"Working — {title}"
+        blocks.append(
+            f"<details class='adv{' lead' if index == 0 else ''}'{' open' if index == 0 else ''}>"
+            f"<summary>{html.escape(label)}</summary>"
+            f"<div class='advbody'>{inner}</div>"
+            "</details>"
+        )
+    return "\n".join(blocks)
+
+
+def _headline(advice_md: str) -> str:
+    """The single line the plan pass says matters most — the reason to open the page."""
+    match = re.search(
+        # Any letter prefix: the output spec's lettering shifts when sections
+        # are added, and the heading text is what identifies it.
+        r"^#{1,4}\s*(?:[A-Z]\.\s*)?The one thing that matters most.*?$\n+(.+?)(?:\n\s*\n|\Z)",
+        advice_md,
+        flags=re.MULTILINE | re.DOTALL | re.IGNORECASE,
+    )
+    if not match:
+        return ""
+    text = " ".join(match.group(1).split())
+    text = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html.escape(text))
+    return f"<section class='headline'><span class='label'>Do this first</span><p>{text}</p></section>"
+
+
+def build_site(data: dict, advice_md: str, generated_at: datetime, results: dict | None = None) -> str:
     budget = data["budget"].get("b") or 0
     squad = data["squad"]
     team_value = sum(p.get("mv") or 0 for p in squad)
@@ -277,11 +460,8 @@ def build_site(data: dict, advice_md: str, generated_at: datetime) -> str:
     else:
         rank_block = ""
 
-    advice_html = markdown.markdown(advice_md, extensions=["tables"])
-    # Tables must scroll inside their own container, otherwise they stretch
-    # the advice card and every paragraph clips at phone width.
-    advice_html = advice_html.replace("<table>", "<div class='tablewrap'><table>")
-    advice_html = advice_html.replace("</table>", "</table></div>")
+    advice_html = _advice_html(advice_md)
+    headline = _headline(advice_md)
     stamp = generated_at.strftime("%d.%m.%Y %H:%M")
 
     return f"""<!doctype html>
@@ -326,13 +506,84 @@ h1 {{ font-size: 1.25rem; font-weight: 600; }}
 .deadline.muted {{ color: var(--muted); }}
 .of {{ font-size: 1.2rem; color: var(--muted); }}
 h2 {{ font-size: .95rem; font-weight: 600; margin: 30px 0 10px; padding-left: 10px; border-left: 4px solid var(--ink); }}
-.advice {{ background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; font-size: .93rem; }}
+.advice {{ font-size: .93rem; }}
 .advice .tablewrap {{ overflow-x: auto; }}
-.advice h1, .advice h2, .advice h3 {{ font-size: .95rem; margin: 14px 0 6px; padding: 0; border: 0; }}
+details.adv {{
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  margin-bottom: 8px; overflow: hidden;
+}}
+details.adv > summary {{
+  cursor: pointer; list-style: none; padding: 11px 14px;
+  font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase;
+  letter-spacing: .05em; font-size: .82rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}}
+details.adv > summary::-webkit-details-marker {{ display: none; }}
+details.adv > summary::after {{
+  content: "+"; font-family: -apple-system, sans-serif; font-size: 1.1rem;
+  color: var(--muted); line-height: 1;
+}}
+details.adv[open] > summary::after {{ content: "–"; }}
+details.adv[open] > summary {{ border-bottom: 1px solid var(--line); }}
+details.adv > summary:hover {{ background: var(--highlight); }}
+summary:focus-visible {{ outline: 2px solid var(--amber); outline-offset: -2px; }}
+.advbody {{ padding: 12px 14px 14px; }}
+.advbody > *:first-child {{ margin-top: 0; }}
+.advice h4 {{
+  font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase;
+  letter-spacing: .05em; font-size: .74rem; color: var(--muted);
+  margin: 16px 0 6px; padding: 0; border: 0;
+}}
+.advbody > h4:first-child {{ margin-top: 0; }}
 .advice p, .advice li {{ margin-bottom: 8px; }}
 .advice ul, .advice ol {{ padding-left: 20px; }}
-.advice table {{ border-collapse: collapse; font-size: .85rem; margin: 8px 0; }}
-.advice th, .advice td {{ border: 1px solid var(--line); padding: 4px 8px; text-align: left; }}
+.advice table {{ width: 100%; border-collapse: collapse; font-size: .84rem; margin: 10px 0; }}
+.advice th {{
+  text-align: left; padding: 4px 10px 6px 0; border-bottom: 1px solid var(--ink);
+  font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  font-weight: 600; white-space: nowrap;
+}}
+.advice td {{
+  padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line);
+  text-align: left; vertical-align: top;
+}}
+.advice th:last-child, .advice td:last-child {{ padding-right: 0; }}
+.headline {{
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--green); border-radius: 6px;
+  padding: 12px 14px; margin: 0 0 22px;
+}}
+.scorecard {{ display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }}
+.sc {{
+  flex: 1 1 88px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 6px; padding: 9px 11px;
+}}
+.sclabel {{
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); white-space: nowrap;
+}}
+.scnum {{
+  font-family: "Oswald", "Arial Narrow", sans-serif; font-size: 1.15rem;
+  font-variant-numeric: tabular-nums; margin-top: 2px;
+}}
+.scnum.win {{ color: var(--green); }}
+.scsub {{ display: block; font-family: -apple-system, sans-serif; font-size: .6rem; color: var(--muted); letter-spacing: 0; }}
+tr.hdr th {{
+  text-align: left; font-size: .66rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); font-weight: 600; padding: 0 6px 6px; border-bottom: 1px solid var(--ink);
+}}
+tr.hdr th.num {{ text-align: right; }}
+.supersede {{
+  font-size: .76rem; color: var(--muted); font-style: italic;
+  border-left: 2px solid var(--line); padding-left: 9px; margin-bottom: 12px;
+}}
+details.adv.lead {{ border-color: var(--ink); }}
+details.adv.lead > summary {{ font-size: .9rem; }}
+.headline .label {{
+  font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase;
+  letter-spacing: .08em; font-size: .68rem; color: var(--muted); display: block; margin-bottom: 3px;
+}}
+.headline p {{ font-size: .95rem; line-height: 1.45; }}
 .tablewrap {{ overflow-x: auto; }}
 table.data {{ width: 100%; border-collapse: collapse; font-size: .88rem; }}
 table.data td {{ padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }}
@@ -427,6 +678,8 @@ footer {{ margin-top: 40px; font-size: .74rem; color: var(--muted); }}
   {_deadline_block(data, generated_at)}
 </section>
 
+{headline}
+
 <h2>Best XI — matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
 <p class="note">The lineup you can actually field, from the players you own right now — transfers are suggested separately under Advice.
 Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</strong> = away match.</p>
@@ -440,7 +693,10 @@ Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</stro
 </table></div>
 
 <h2>Advice</h2>
+<p class="note">The plan is the answer. The three working sections below it are the separate passes it was reconciled from — kept so the reasoning is visible, not as advice to follow.</p>
 <div class="advice">{advice_html}</div>
+
+{_scorecard(results)}
 
 <h2>Squad — predicted points, matchday {html.escape(str((data.get("matchday") or {}).get("day", "")))}</h2>
 <div class="tablewrap"><table class="data">

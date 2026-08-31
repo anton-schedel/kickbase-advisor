@@ -40,13 +40,84 @@ h1 { font-size: 1.25rem; font-weight: 600; }
 .deadline.muted { color: var(--muted); }
 .of { font-size: 1.2rem; color: var(--muted); }
 h2 { font-size: .95rem; font-weight: 600; margin: 30px 0 10px; padding-left: 10px; border-left: 4px solid var(--ink); }
-.advice { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; font-size: .93rem; }
+.advice { font-size: .93rem; }
 .advice .tablewrap { overflow-x: auto; }
-.advice h1, .advice h2, .advice h3 { font-size: .95rem; margin: 14px 0 6px; padding: 0; border: 0; }
+details.adv {
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+  margin-bottom: 8px; overflow: hidden;
+}
+details.adv > summary {
+  cursor: pointer; list-style: none; padding: 11px 14px;
+  font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase;
+  letter-spacing: .05em; font-size: .82rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+details.adv > summary::-webkit-details-marker { display: none; }
+details.adv > summary::after {
+  content: "+"; font-family: -apple-system, sans-serif; font-size: 1.1rem;
+  color: var(--muted); line-height: 1;
+}
+details.adv[open] > summary::after { content: "–"; }
+details.adv[open] > summary { border-bottom: 1px solid var(--line); }
+details.adv > summary:hover { background: var(--highlight); }
+summary:focus-visible { outline: 2px solid var(--amber); outline-offset: -2px; }
+.advbody { padding: 12px 14px 14px; }
+.advbody > *:first-child { margin-top: 0; }
+.advice h4 {
+  font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase;
+  letter-spacing: .05em; font-size: .74rem; color: var(--muted);
+  margin: 16px 0 6px; padding: 0; border: 0;
+}
+.advbody > h4:first-child { margin-top: 0; }
 .advice p, .advice li { margin-bottom: 8px; }
 .advice ul, .advice ol { padding-left: 20px; }
-.advice table { border-collapse: collapse; font-size: .85rem; margin: 8px 0; }
-.advice th, .advice td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; }
+.advice table { width: 100%; border-collapse: collapse; font-size: .84rem; margin: 10px 0; }
+.advice th {
+  text-align: left; padding: 4px 10px 6px 0; border-bottom: 1px solid var(--ink);
+  font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  font-weight: 600; white-space: nowrap;
+}
+.advice td {
+  padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line);
+  text-align: left; vertical-align: top;
+}
+.advice th:last-child, .advice td:last-child { padding-right: 0; }
+.headline {
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 3px solid var(--green); border-radius: 6px;
+  padding: 12px 14px; margin: 0 0 22px;
+}
+.scorecard { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.sc {
+  flex: 1 1 88px; background: var(--card); border: 1px solid var(--line);
+  border-radius: 6px; padding: 9px 11px;
+}
+.sclabel {
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); white-space: nowrap;
+}
+.scnum {
+  font-family: "Oswald", "Arial Narrow", sans-serif; font-size: 1.15rem;
+  font-variant-numeric: tabular-nums; margin-top: 2px;
+}
+.scnum.win { color: var(--green); }
+.scsub { display: block; font-family: -apple-system, sans-serif; font-size: .6rem; color: var(--muted); letter-spacing: 0; }
+tr.hdr th {
+  text-align: left; font-size: .66rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--muted); font-weight: 600; padding: 0 6px 6px; border-bottom: 1px solid var(--ink);
+}
+tr.hdr th.num { text-align: right; }
+.supersede {
+  font-size: .76rem; color: var(--muted); font-style: italic;
+  border-left: 2px solid var(--line); padding-left: 9px; margin-bottom: 12px;
+}
+details.adv.lead { border-color: var(--ink); }
+details.adv.lead > summary { font-size: .9rem; }
+.headline .label {
+  font-family: "Oswald", "Arial Narrow", sans-serif; text-transform: uppercase;
+  letter-spacing: .08em; font-size: .68rem; color: var(--muted); display: block; margin-bottom: 3px;
+}
+.headline p { font-size: .95rem; line-height: 1.45; }
 .tablewrap { overflow-x: auto; }
 table.data { width: 100%; border-collapse: collapse; font-size: .88rem; }
 table.data td { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -124,155 +195,254 @@ footer { margin-top: 40px; font-size: .74rem; color: var(--muted); }
 <body>
 <header>
   <h1>KICKBASE Königsklasse 26/27</h1>
-  <span class="stamp">updated 27.08.2026 18:43</span>
+  <span class="stamp">updated 31.08.2026 09:37</span>
 </header>
 
 <section class="hero">
   <div>
     <div class="label">Budget</div>
-    <div class="hero-num down">-5,90 M€</div>
+    <div class="hero-num down">-11,47 M€</div>
     <div class='deadline'>must be ≥ 0 by kickoff — sell!</div>
   </div>
   <div>
     <div class="label">Team value</div>
-    <div class="hero-num">158,29 M€</div>
+    <div class="hero-num">166,44 M€</div>
   </div>
-  <div><div class='label'>Projected rank</div><div class='hero-num'>5<span class='of'>/10</span></div><div class='deadline muted'>-213 behind leader</div></div>
-  <div><div class='label'>Budget deadline</div><div class='hero-num'>24 hours</div><div class='deadline muted'>Fri 28.08. 18:30 first kickoff</div></div>
+  <div><div class='label'>Projected rank</div><div class='hero-num'>8<span class='of'>/11</span></div><div class='deadline muted'>-414 behind leader</div></div>
+  <div><div class='label'>Budget deadline</div><div class='hero-num'>4.4 days</div><div class='deadline muted'>Fri 04.09. 18:30 first kickoff</div></div>
 </section>
 
-<h2>Best XI — matchday 1</h2>
+<section class='headline'><span class='label'>Do this first</span><p>Get all three blind bids placed today at their maximum — every point of this week&#x27;s plan depends on filling the two empty slots, and a sealed bid you underpriced is a slot you cannot get back on Wednesday.</p></section>
+
+<h2>Best XI — matchday 2</h2>
 <p class="note">The lineup you can actually field, from the players you own right now — transfers are suggested separately under Advice.
 Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</strong> = away match.</p>
-<p class='note warnbox'>Budget is 5,80 M€ short at kickoff, so this XI already assumes you sell <strong>Silas (2,35 M€), Vozar (3,25 M€)</strong> — the cheapest way out in points. Keeping everyone would project 752, but that eleven cannot be fielded.</p>
-<div class='pitch'><div class='prow'><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/f60de765e2e34fce8747b78399dca305.png' alt='' loading='lazy'><span class='badge'>135</span></div><div class='pn'>Guirassy</div><div class='pr'>114–150</div><div class='po'>vs HSV</div></div><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/a8113275ef93446185b8dd4966df1834.png' alt='' loading='lazy'><span class='badge'>81*</span></div><div class='pn'>Saibari</div><div class='po'>vs VFB</div></div><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/dce6b383ea96472faf6e2059c30593a9.png' alt='' loading='lazy'><span class='badge'>64</span></div><div class='pn'>Pejcinovic</div><div class='pr'>48–81</div><div class='po'>at FCB</div></div></div><div class='prow'><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/d508a06c367e48b4a6ad92a95ee8612d.png' alt='' loading='lazy'><span class='badge'>124</span></div><div class='pn'>Uzun</div><div class='pr'>78–162</div><div class='po'>at FCU</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/eabed4e9dee0416bbcc8ff5864f44ea5.png' alt='' loading='lazy'><span class='badge'>77</span></div><div class='pn'>Grifo</div><div class='pr'>49–111</div><div class='po'>vs SVW</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/9ee1048c9191462c82b58e23f1dbf647.png' alt='' loading='lazy'><span class='badge'>75</span></div><div class='pn'>Burcu</div><div class='pr'>49–107</div><div class='po'>vs SGE</div></div><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/80153ba03a7849fdae3b398764d24b18.png' alt='' loading='lazy'><span class='badge'>43</span></div><div class='pn'>Batista Meier</div><div class='pr'>28–53</div><div class='po'>at M05</div></div></div><div class='prow'><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/0f3d607126284679ac5bc7ee81f890ad.png' alt='' loading='lazy'><span class='badge'>74</span></div><div class='pn'>Baum</div><div class='pr'>53–96</div><div class='po'>at FCU</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/f83f61dc46de468bb38cb6a9d9f51205.png' alt='' loading='lazy'><span class='badge'>73</span></div><div class='pn'>Simpson-Pusey</div><div class='pr'>62–88</div><div class='po'>vs TSG</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/b20e95c99c5c414dba98788ce536d7ad.png' alt='' loading='lazy'><span class='badge'>0</span></div><div class='pn'>Chiarodia</div><div class='po'>at RBL</div></div></div><div class='prow'><div class='pp'><div class='shirt gk'><img class='face' src='https://kickbase.b-cdn.net/content/file/e45a165d68934e8e8a2bbc33ecbbbc96.png' alt='' loading='lazy'><span class='badge'>6*</span></div><div class='pn'>Philipp</div><div class='po'>at KOE</div></div></div></div><div class='pitchfoot'><span>3-4-3</span><span><strong>752</strong> projected points</span></div>
+<p class='note warnbox'>Budget is 11,07 M€ short at kickoff, so this XI already assumes you sell <strong>Simpson-Pusey (12,46 M€)</strong> — the cheapest way out in points. Keeping everyone would project 706, but that eleven cannot be fielded.</p>
+<div class='pitch'><div class='prow'><div class='pp'><div class='shirt empty'>−100</div><div class='pn'>empty</div><div class='po'>penalty</div></div><div class='pp'><div class='shirt empty'>−100</div><div class='pn'>empty</div><div class='po'>penalty</div></div></div><div class='prow'><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/a8113275ef93446185b8dd4966df1834.png' alt='' loading='lazy'><span class='badge'>108*</span></div><div class='pn'>Saibari</div><div class='pr'>0–178</div><div class='po'>at S04</div></div><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/f60de765e2e34fce8747b78399dca305.png' alt='' loading='lazy'><span class='badge'>99</span></div><div class='pn'>Guirassy</div><div class='pr'>86–119</div><div class='po'>at TSG</div></div><div class='pp'><div class='shirt fwd'><img class='face' src='https://kickbase.b-cdn.net/content/file/dce6b383ea96472faf6e2059c30593a9.png' alt='' loading='lazy'><span class='badge'>99*</span></div><div class='pn'>Pejcinovic</div><div class='pr'>75–121</div><div class='po'>vs KOE</div></div></div><div class='prow'><div class='pp'><div class='shirt mid'><img class='face' src='https://kickbase.b-cdn.net/content/file/d508a06c367e48b4a6ad92a95ee8612d.png' alt='' loading='lazy'><span class='badge'>128*</span></div><div class='pn'>Uzun</div><div class='pr'>79–165</div><div class='po'>vs FCA</div></div></div><div class='prow'><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/eb576d01f97f40aa86c36b009d8502ec.png' alt='' loading='lazy'><span class='badge'>127</span></div><div class='pn'>Mittelstädt</div><div class='pr'>105–156</div><div class='po'>vs KOE</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/0f3d607126284679ac5bc7ee81f890ad.png' alt='' loading='lazy'><span class='badge'>96*</span></div><div class='pn'>Baum</div><div class='pr'>74–115</div><div class='po'>vs FCA</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/0337794cdbe74c759f6ea4c6ac9c796b.png' alt='' loading='lazy'><span class='badge'>79</span></div><div class='pn'>Matsima</div><div class='pr'>62–94</div><div class='po'>at SGE</div></div><div class='pp'><div class='shirt def'><img class='face' src='https://kickbase.b-cdn.net/content/file/b20e95c99c5c414dba98788ce536d7ad.png' alt='' loading='lazy'><span class='badge'>0</span></div><div class='pn'>Chiarodia</div><div class='po'>vs ELV</div></div></div><div class='prow'><div class='pp'><div class='shirt gk'><img class='face' src='https://kickbase.b-cdn.net/content/file/e45a165d68934e8e8a2bbc33ecbbbc96.png' alt='' loading='lazy'><span class='badge'>5*</span></div><div class='pn'>Philipp</div><div class='pr'>0–79</div><div class='po'>vs BVB</div></div></div></div><div class='pitchfoot'><span>4-3-3</span><span><strong>541</strong> projected points</span></div>
 
 <h2>League projection</h2>
 <p class="note">Every manager's current squad, run through the same model at its best legal formation.</p>
 <div class="tablewrap"><table class="data">
-<tr class='rival'><td class='rank'>1</td><td class='name'>AlexG<span class='sub'>4-4-2 · 14 players</span></td><td class='num'>182,81 M€</td><td class='num pred'>965</td></tr>
-<tr class='rival'><td class='rank'>2</td><td class='name'>Captain Luca<span class='sub'>5-3-2 · 14 players</span></td><td class='num'>183,33 M€</td><td class='num pred'>856</td></tr>
-<tr class='rival'><td class='rank'>3</td><td class='name'>Dan the Man<span class='sub'>3-4-3 · 15 players</span></td><td class='num'>179,76 M€</td><td class='num pred'>834</td></tr>
-<tr class='rival'><td class='rank'>4</td><td class='name'>Coach David<span class='sub'>4-4-2 · 15 players</span></td><td class='num'>179,03 M€</td><td class='num pred'>784</td></tr>
-<tr class='rival me'><td class='rank'>5</td><td class='name'>Manager Anton <span class='sub'>3-4-3 · 13 players</span></td><td class='num'>158,29 M€</td><td class='num pred'>752</td></tr>
-<tr class='rival'><td class='rank'>6</td><td class='name'>Niklas<span class='sub'>3-4-3 · 12 players</span></td><td class='num'>138,83 M€</td><td class='num pred'>682</td></tr>
-<tr class='rival'><td class='rank'>7</td><td class='name'>KalleDieKralle<span class='sub'>3-4-3 · 11 players</span></td><td class='num'>149,34 M€</td><td class='num pred'>681</td></tr>
-<tr class='rival'><td class='rank'>8</td><td class='name'>KevDerChef<span class='sub'>3-4-3 · 12 players</span></td><td class='num'>151,44 M€</td><td class='num pred'>622</td></tr>
-<tr class='rival'><td class='rank'>9</td><td class='name'>Niklas Notbremse<span class='sub'>3-5-2 · 11 players</span></td><td class='num'>148,65 M€</td><td class='num pred'>606</td></tr>
-<tr class='rival'><td class='rank'>10</td><td class='name'>ADMIN<span class='sub'>11 empty · 0 players</span></td><td class='num'>0,00 M€</td><td class='num pred'>-1100</td></tr>
+<tr class='rival'><td class='rank'>1</td><td class='name'>KevDerChef<span class='sub'>5-4-1 · 14 players</span></td><td class='num'>196,18 M€</td><td class='num pred'>954</td></tr>
+<tr class='rival'><td class='rank'>2</td><td class='name'>AlexG<span class='sub'>3-4-3 · 14 players</span></td><td class='num'>184,66 M€</td><td class='num pred'>909</td></tr>
+<tr class='rival'><td class='rank'>3</td><td class='name'>KalleDieKralle<span class='sub'>4-4-2 · 12 players</span></td><td class='num'>175,90 M€</td><td class='num pred'>869</td></tr>
+<tr class='rival'><td class='rank'>4</td><td class='name'>Dan the Man<span class='sub'>3-4-3 · 13 players</span></td><td class='num'>159,99 M€</td><td class='num pred'>841</td></tr>
+<tr class='rival'><td class='rank'>5</td><td class='name'>Coach David<span class='sub'>5-4-1 · 14 players</span></td><td class='num'>178,76 M€</td><td class='num pred'>759</td></tr>
+<tr class='rival'><td class='rank'>6</td><td class='name'>Captain Luca<span class='sub'>1 empty · 10 players</span></td><td class='num'>147,54 M€</td><td class='num pred'>655</td></tr>
+<tr class='rival'><td class='rank'>7</td><td class='name'>Paule<span class='sub'>1 empty · 10 players</span></td><td class='num'>149,33 M€</td><td class='num pred'>622</td></tr>
+<tr class='rival me'><td class='rank'>8</td><td class='name'>Manager Anton <span class='sub'>2 empty · 10 players</span></td><td class='num'>166,44 M€</td><td class='num pred'>541</td></tr>
+<tr class='rival'><td class='rank'>9</td><td class='name'>Niklas<span class='sub'>1 empty · 10 players</span></td><td class='num'>152,53 M€</td><td class='num pred'>518</td></tr>
+<tr class='rival'><td class='rank'>10</td><td class='name'>Niklas Notbremse<span class='sub'>1 empty · 10 players</span></td><td class='num'>139,39 M€</td><td class='num pred'>478</td></tr>
+<tr class='rival'><td class='rank'>11</td><td class='name'>ADMIN<span class='sub'>11 empty · 0 players</span></td><td class='num'>0,00 M€</td><td class='num pred'>-1100</td></tr>
 </table></div>
 
 <h2>Advice</h2>
-<div class="advice"><h2>1. This week's plan</h2>
-<p>I'm treating this as an advisory read on the three prior stages, not a code task — no skill applies.</p>
-<p>The stages contradict each other on exactly one thing: <strong>when Grifo gets sold.</strong> The sell stage says Friday (capture the nightly tick on a cooling curve); the buy stage says tonight (the Reis auction closes at ~22:10 and a bid reserves cash on placement). Tonight wins, and that decision sets the whole sequence.</p>
-<hr />
-<h2>A. This week's plan</h2>
-<p><strong>Thursday 27.08, now → 21:45 — do this in the next three hours, in this order</strong></p>
-<ol>
-<li><strong>Verify the real budget in-app.</strong> The briefing says −5.80M, the sell stage −5.90M. I plan against −5.90M; if it's −5.80M everything below just gets 0.10M easier.</li>
-<li><strong>Sell Silas to Kickbase → +2.35M.</strong> Broken tibia and fibula. His +8.82%/day is the market not having repriced the news; waiting for tonight's 22:00 tick is betting against an injury that's already public. Budget: <strong>−3.55M</strong>.</li>
-<li><strong>Sell Grifo to Kickbase → +12.90M.</strong> Budget: <strong>+9.35M</strong> — and this is the first moment all week I can legally place a bid. Both sales are to Kickbase, so they settle instantly at market value with zero auction risk.</li>
-<li><strong>Glance at Machino</strong> (2.88M ask vs 4.05M value). If that ask genuinely executes it's 1.17M of free value, but nine manager listings are priced below value in this briefing, so I assume it's non-executable. It is <strong>not</strong> in the primary plan — no room alongside Reis.</li>
-</ol>
-<p><strong>Thursday ~21:50 — place the one bid that matters</strong></p>
-<ol>
-<li><strong>Bid 7.85M on Reis</strong> (blind, closes ~22:10). Walk-away 8.10M. Cash reserved on placement → budget <strong>+1.50M</strong>. This is the Grifo money going straight back to work: 75 predicted for 6.60M and KB <em>very likely</em> / 79 minutes, versus Grifo's 77 for 12.90M on KB <em>uncertain</em> / 57 minutes. Same points, half the price, better start certainty. <strong>The Grifo sale pays for the Reis bid — nothing else funds it.</strong></li>
-</ol>
-<p><strong>Thursday 22:00 — nightly value update.</strong> Squad values move; cash does not. This is the only update between now and the deadline, which is why "sell late" is worth exactly 46k this week and nothing more.</p>
-<p><strong>Thursday ~22:10 — Reis settles. Two branches:</strong></p>
-<ul>
-<li><strong>Won</strong> → squad 12, budget +1.50M. Go to step 6.</li>
-<li><strong>Lost</strong> → the 7.85M is released the moment the auction closes, back to +9.35M. <strong>Bid 4.05M on Mane before 02:22 Friday</strong> (walk-away 4.30M) → +5.30M. Mane is a 3.60M BVB defender on the best fixture on the board (72% win, 38% CS) and he replaces Chiarodia's dead 0 rather than Vozar's 5. The two auctions don't overlap, so this is a genuine fallback — I never need cash for both.</li>
-</ul>
-<p><strong>Thursday ~22:20 — after Reis has settled, not before</strong></p>
-<ol>
-<li><strong>Offer 0.60M to KevDerChef for Drewes</strong> (walk-away 0.70M). Negotiation, no countdown, so it can sit open overnight. 21 Bundesliga starts at Ø76 parked at the 500k floor; he does not fix the goalkeeper hole this week (7 predicted), he's a free-slot lottery ticket that re-rates into eight figures if BVB's number one goes down. Budget: <strong>+0.90M</strong>.</li>
-</ol>
-<p><strong>Friday 28.08, morning — one auction expires and I let it go</strong></p>
-<ol>
-<li><strong>Moreira (24.51M, ~10:15 Friday)</strong> — on paper he beats Saibari outright: 98 vs 81, <em>nailed on</em> vs <em>uncertain</em>, +194k/d vs −41k/d, and 5.6M cheaper. It's a <strong>blind</strong> auction needing ~26.5M, which means selling Saibari first and then bidding blind. Lose it and I'm ten hours from kickoff holding 33M in cash, a squad of ten and a −100 empty slot. Let it expire. <strong>Re-check Saibari's KB rating daily</strong> — if it slides to <em>unlikely</em>, or Bayern add a forward, that hold is over.</li>
-<li><strong>No third sale.</strong> I checked selling Batista Meier (7.57M) to fund Mane <em>alongside</em> Reis: XI goes 751 → ~768. That's +17 points, well inside the ±50 noise band, bought with a rising asset and a second blind-auction gamble. Not worth it.</li>
-</ol>
-<p><strong>Friday 28.08, before 20:30 — the deadline</strong></p>
-<ol>
-<li>Confirm budget ≥ 0 (it should read ~+1.00M) and confirm the XI: <strong>3-4-3 — Drewes; Baum, Simpson-Pusey, Chiarodia; Uzun, Reis, Burcu, Batista Meier; Guirassy, Saibari, Pejcinovic. Vozar benched.</strong> Nothing to sell on Friday — the deadline is already cleared by Thursday night. That's the point of front-loading it.</li>
-</ol>
-<hr />
-<h2>B. Budget math</h2>
+<p class="note">The plan is the answer. The three working sections below it are the separate passes it was reconciled from — kept so the reasoning is visible, not as advice to follow.</p>
+<div class="advice"><details class='adv lead' open><summary>This week&#x27;s plan</summary><div class='advbody'><p><strong>Sell Simpson-Pusey and Guirassy this morning, then spend 22.40M € today on Vidović, Makengo, Ljubicic and the Nguefack insurance bid — and cut Rots.</strong> That fields a legal 5-2-3 worth ~812 points instead of 541, clears the deficit with 9.10M € to spare at kickoff, and never puts the budget below zero at the moment any bid is placed.</p>
+<h4>Decisions</h4>
 <div class='tablewrap'><table>
 <thead>
 <tr>
-<th>Moment</th>
-<th>Event</th>
+<th>Player</th>
+<th>Action</th>
+<th>When</th>
+<th>Price</th>
+<th>Why (one line)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simpson-Pusey</td>
+<td><strong>SELL</strong></td>
+<td>Monday, now</td>
+<td>12.46M €</td>
+<td>Falling −58k/d and my weakest outfield row; his sale alone clears the −11.47M € deficit.</td>
+</tr>
+<tr>
+<td>Guirassy</td>
+<td><strong>SELL</strong></td>
+<td>Monday, immediately after</td>
+<td>30.11M €</td>
+<td>Topped out at +74k/d — 30M € parked on 99 pts while three slots stand empty; his cash buys back ~170 pts across three startable slots today.</td>
+</tr>
+<tr>
+<td>Vidović</td>
+<td><strong>BID</strong></td>
+<td>Monday (blind, closes Tue ~11:45)</td>
+<td><strong>8.50M €</strong> — walk-away 8.50M € (single sealed bid)</td>
+<td>The only affordable nailed-on midfielder on the board; my MID line is Uzun and nobody.</td>
+</tr>
+<tr>
+<td>Makengo</td>
+<td><strong>BID</strong></td>
+<td>Monday (blind, closes Tue ~21:30)</td>
+<td><strong>7.90M €</strong> — walk-away 7.90M € (single sealed bid)</td>
+<td>Best points-per-million on the market, rising +4.3%/day, KB <em>very likely</em>.</td>
+</tr>
+<tr>
+<td>Nguefack</td>
+<td><strong>BID</strong></td>
+<td>Monday (blind, closes Tue ~03:00)</td>
+<td><strong>0.85M €</strong> — walk-away 0.85M € (single sealed bid)</td>
+<td>Insurance: if Vidović loses I have no second midfielder and no legal shape — 850k € to remove a −100 slot.</td>
+</tr>
+<tr>
+<td>Ljubicic</td>
+<td><strong>BUY</strong> (negotiation, Captain Luca)</td>
+<td>Monday, today</td>
+<td>Open <strong>5.15M €</strong>, close ≤5.60M €, <strong>walk-away 5.70M €</strong></td>
+<td>Third forward slot; accelerating +344k/d (+7.2%), so each day of delay costs more than the whole haggling range.</td>
+</tr>
+<tr>
+<td>Rots</td>
+<td><strong>CUT — no action</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Dropped buy: only ~8.9M € is free against his 8.98M € ask, and 50 coin-flip pts from an <em>uncertain</em> starter with no scoring record and an irrational below-market ask is the programme's weakest item.</td>
+</tr>
+<tr>
+<td>Mittelstädt</td>
+<td><strong>HOLD — delist today</strong></td>
+<td>Monday</td>
+<td>—</td>
+<td>127 pts, my #2 points source; he is sitting on the market under my own name at 26.35M € with 0 bids. Pull it.</td>
+</tr>
+<tr>
+<td>Uzun</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Top predicted scorer (128), nailed on at home, "turns in ~17d" — no reason to touch him.</td>
+</tr>
+<tr>
+<td>Saibari</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Flat is the expected shape of a 2.0x role bet; +154k/week costs nothing to wait. Points are a coin flip (KB <em>uncertain</em>).</td>
+</tr>
+<tr>
+<td>Baum</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Rising +1.29%/day and nailed on — value and points at once.</td>
+</tr>
+<tr>
+<td>Matsima</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Rising +129k/d, turns in ~15d; poor fixture, but revisit next week.</td>
+</tr>
+<tr>
+<td>Pejcinovic</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Steepest riser in the squad (+4.10%/day) and nailed on for 99 pts.</td>
+</tr>
+<tr>
+<td>Philipp</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>5 pts off six expected minutes, but he is my only keeper.</td>
+</tr>
+<tr>
+<td>Chiarodia</td>
+<td><strong>HOLD / FIELD</strong></td>
+<td>—</td>
+<td>—</td>
+<td>Verdict changed from bench to starter now Rots is cut: 0 pts in the fifth defensive slot still beats −100.</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The XI (5-2-3, ~812 pts):</strong> Philipp — Mittelstädt, Baum, Matsima, <strong>Makengo</strong>, Chiarodia — Uzun, <strong>Vidović</strong> — Saibari, Pejcinovic, <strong>Ljubicic</strong>.
+Nguefack, if the bid wins, benches. One Friday check: if KB rates Nguefack <em>very likely</em> or <em>nailed on</em> by then, play him in a 4-3-3 in place of Chiarodia — Chiarodia is a certain 0 (<em>nicht im Kader</em>), a starting Gladbach squad player is not. The briefing gives no prediction for Nguefack, so this is a Friday-morning read, not a decision I can make now.</p>
+<p><strong>Monday (today), in this order — all of it before evening:</strong>
+1. Sell Simpson-Pusey → budget +0.99M €.
+2. Sell Guirassy → budget <strong>+31.10M €</strong>.
+3. Delist Mittelstädt.
+4. Place all three blind bids: Vidović 8.50M €, Makengo 7.90M €, Nguefack 0.85M €. → 13.85M € free.
+5. Open Ljubicic with Captain Luca at 5.15M €, settling today. He bought Uduokhai and Lippmann this morning — he wants cash, and a trip to Leverkusen is a poor showcase week for a player he's trying to sell high. → <strong>8.70M € free.</strong></p>
+<p>Nothing closes tonight (Gruda is rejected, Díaz was never fundable), so there is no 19:40 pressure — but everything above still happens Monday, because a bid reserves cash at placement and Nguefack's auction expires at ~03:00 Tuesday.</p>
+<p><strong>Tuesday:</strong> Nguefack settles ~03:00, Vidović ~11:45, Makengo ~21:30. Each loss releases its own reserved cash immediately.</p>
+<p><strong>Wednesday:</strong> the one decision point. If both blind auctions won, I hold ~8.9M € and buy nothing — Rots' 8.98M € ask does not clear, and that is the cut, not a delay. If <strong>Vidović lost</strong>: 8.50M € is back, and the money goes to a replacement <em>midfielder</em> (Nguefack covers the slot if his bid won; otherwise take the best startable MID on Wednesday's board) — not to Rots. If <strong>Makengo lost</strong>: 7.90M € is back and goes to a startable defender; Chiarodia already occupies a zero-point slot, so a second one is the shape I cannot afford. If <strong>Ljubicic fell through</strong>: switch to 5-3-2 with Nguefack in midfield (~773 pts) and use his 5.15M € on any forward with confirmed minutes.</p>
+<p><strong>Thursday:</strong> nothing planned. Reconfirm Mittelstädt is off the market and that KB has not downgraded Saibari or Vidović.</p>
+<p><strong>Friday before 20:30:</strong> set the shape per the contingency above, verify budget ≥ 0 (it will be ~9.10M €), and make the Nguefack-vs-Chiarodia call on KB's rating.</p>
+<p><strong>Worst case, stated plainly:</strong> both blind bids lose and Ljubicic falls through. I would then hold 8 players, three empty slots, ~342 points and ~31M € in cash. That is the real risk in this plan and the reason all three bids go in at their maximum today rather than at a haggling price.</p>
+<h4>Budget math</h4>
+<p>Every line is the budget at the moment of the action, in sequence:</p>
+<div class='tablewrap'><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Δ</th>
 <th>Budget</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Thu 18:46</td>
-<td>Start</td>
-<td><strong>−5.90M</strong></td>
+<td>Start, Monday 09:39</td>
+<td>—</td>
+<td><strong>−11.47M €</strong></td>
 </tr>
 <tr>
-<td>Thu ~21:45</td>
-<td>Sell Silas → Kickbase</td>
-<td>+2.35M → <strong>−3.55M</strong></td>
+<td>SELL Simpson-Pusey</td>
+<td>+12.46M €</td>
+<td>+0.99M €</td>
 </tr>
 <tr>
-<td>Thu ~21:50</td>
-<td>Sell Grifo → Kickbase</td>
-<td>+12.90M → <strong>+9.35M</strong></td>
+<td>SELL Guirassy</td>
+<td>+30.11M €</td>
+<td><strong>+31.10M €</strong></td>
 </tr>
 <tr>
-<td>Thu ~21:55</td>
-<td><strong>Bid Reis −7.85M</strong> (reserved at placement; 7.85 ≤ 9.35 ✔)</td>
-<td><strong>+1.50M</strong></td>
+<td>BID Vidović (reserved at placement)</td>
+<td>−8.50M €</td>
+<td>+22.60M €</td>
 </tr>
 <tr>
-<td>Thu 22:10</td>
-<td>Reis settles — bid becomes payment</td>
-<td><strong>+1.50M</strong></td>
+<td>BID Makengo</td>
+<td>−7.90M €</td>
+<td>+14.70M €</td>
 </tr>
 <tr>
-<td>Thu ~22:20</td>
-<td><strong>Offer Drewes −0.60M</strong> (0.60 ≤ 1.50 ✔)</td>
-<td><strong>+0.90M</strong></td>
+<td>BID Nguefack</td>
+<td>−0.85M €</td>
+<td>+13.85M €</td>
 </tr>
 <tr>
-<td>Fri ~00:00</td>
-<td>Login bonus</td>
-<td>+0.10M → <strong>+1.00M</strong></td>
+<td>BUY Ljubicic (settles instantly)</td>
+<td>−5.15M €</td>
+<td><strong>+8.70M €</strong></td>
 </tr>
 <tr>
-<td><strong>Fri 20:30 kickoff</strong></td>
-<td></td>
-<td><strong>+1.00M ≥ 0 ✔</strong></td>
+<td>Login bonuses Tue–Fri, 4 × 100k</td>
+<td>+0.40M €</td>
+<td><strong>+9.10M € at Friday 20:30</strong> ✓</td>
 </tr>
 </tbody>
 </table></div>
-<p>Check: −5.90 + 2.35 + 12.90 − 7.85 − 0.60 + 0.10 = <strong>+1.00M</strong>.</p>
-<p><strong>Every bid is covered by cash already in the account at the moment of placement.</strong> No bid is funded by money arriving later.</p>
-<p><strong>If both auctions go to walk-away:</strong> −5.90 + 2.35 + 12.90 − 8.10 − 0.70 + 0.10 = <strong>+0.65M ✔</strong></p>
-<p><strong>Fallback, Reis bid lost:</strong> −5.90 + 2.35 + 12.90 − 4.05 − 0.60 + 0.10 = <strong>+4.80M ✔</strong> (and if Machino's 2.88M turns out executable, still <strong>+1.92M ✔</strong>)</p>
-<p><strong>Cost of the timing override:</strong> one nightly tick on Grifo, ~46k. Maximum cash exposure at any single instant: 8.45M against 9.35M available. The budget never goes negative after 21:50 tonight, so there is no path to a Kickbase force-sale.</p>
-<hr />
-<h2>C. Changes to the stage verdicts</h2>
+<p>Total committed: 22.40M € against 31.10M € raised. The budget is never negative at any bid placement — the lowest it reaches is +8.70M €, on Monday, before a single login bonus is needed. <strong>Each bid is funded by a sale that has already completed:</strong> Simpson-Pusey's 12.46M € fills the deficit, and Guirassy's 30.11M € pays for all four buys.</p>
+<p>If Ljubicic runs to his 5.70M € walk-away, the Monday floor is +8.15M € and Friday's close is +8.55M €. Still comfortably positive. The 0.40M € of bonuses is never spent in advance: it arrives one 100k at a time and only shows up in the kickoff figure.</p>
+<h4>What I overrode</h4>
 <ol>
-<li><strong>Grifo: "SELL LATE — Friday before 20:30" → SELL TONIGHT, before 22:00.</strong> The sell stage was optimising a 46k tick; the buy stage needs live cash before a 22:10 blind auction. A bid reserves cash on placement, so a negative balance at 21:55 means no Reis bid at all — that's 46k against a 70-point XI slot. The "sell late" rule earns its keep when several updates land before the deadline; here only one does.</li>
-<li><strong>Vozar: HOLD confirmed, but he is now a bench player, not an XI slot.</strong> The sell stage held him for the accelerating +9.92%/day curve and the XI stage benched him once Reis lands. Both stand — Reis's 75 replaces Vozar's 5 in the eleven while Vozar keeps compounding on the bench. He remains the first sale the day that curve reads "cooling."</li>
-<li><strong>Buy stage's "Reis + Drewes = 8.45M of the 9.35M available" restated as a strict order.</strong> The buy stage listed the two purchases as one programme; Drewes must wait until Reis has settled, because an open negotiation offer may reserve cash against the auction bid. Same total, enforced sequence.</li>
-<li><strong>Silas: sell tonight, and explicitly do NOT wait for the 22:00 update.</strong> Both stages agreed; making it explicit because the deadline rule says a rising player sold late raises more, and Silas is the stated injury exception — his curve has not seen the news.</li>
-<li><strong>B1 (keep Grifo, sell Silas + Vozar, 752 pts) stays rejected, and that closes the briefing-vs-stages conflict.</strong> The briefing's optimizer row of 752 assumes the cheapest-in-points exit. It raises 5.60M against a 5.90M deficit and only clears if Vozar's hype curve ticks once more tonight — 0.12M of headroom on a player with no Bundesliga record. A missed deadline hands the force-sale to Kickbase, which will not politely pick Chiarodia. Reis recovers ~70 of those 72 points anyway, without the gamble.</li>
-<li><strong>Moreira and Günter: no action, both explicitly deferred to next week</strong> rather than left as open "watching" items — Moreira because the sell-then-blind-bid order is exactly what the rules warn against, Günter because 6.5M+ doesn't fit alongside Reis.</li>
+<li><strong>Blind bids go in at the walk-away, not the opening price</strong> (Vidović 8.50M € not 8.15M €; Makengo 7.90M € not 7.55M €). The buy pass listed an "open" and a "walk-away" for both, but a blind auction is a single sealed bid — there is no raise. Vidović and Makengo are <em>mandatory</em>: missing either is −100 points and, without Vidović, no legal formation. Paying ~350k € more to protect against that is obviously correct; saving it is not.</li>
+<li><strong>Nguefack raised from 0.75M € to 0.85M €.</strong> Same logic — +5.6% over value is a thin bid on the one purchase whose entire purpose is removing a −100 slot. +20% on a 0.71M € player costs 140k €.</li>
+<li><strong>Rots is cut.</strong> The buy pass listed him as buy #4 at 8.98M €, capped by remaining cash. Once 1–3 are priced properly, remaining cash is 8.70M € Monday and ~8.90M € Wednesday — it does not reach his ask, and the buy pass's own "9.10M € cap" figure omitted the Nguefack bid from its subtraction. He is the right thing to cut rather than any hold: KB rates him <em>uncertain</em>, his minutes are guessed, he has no scoring record at all, and he is asking <strong>below</strong> market value, which is irrational and unverified. His slot goes to Chiarodia at 0 pts; the XI is 812 instead of 862, and a 50-point single-player gap is inside the model's stated ~50-point error.</li>
+<li><strong>Chiarodia starts.</strong> The buy pass benched him on the assumption Rots landed. He is back in the fifth defensive slot.</li>
+<li><strong>Guirassy sells today despite still gaining +74k per night.</strong> The briefing's timing rule says hold a rising player through the updates you could have waited for. I am overriding it on arithmetic: waiting until Tuesday earns ~74k € on Guirassy, but delays Ljubicic — accelerating at +344k/day — by a full day, and pushes the Vidović bid to within hours of a blind close. Net cost of waiting is ~270k €.</li>
+<li><strong>Rots' negotiation timing</strong> was "today/Tuesday" in the buy pass; the decision point is Wednesday, after both blind auctions settle, because opening it earlier commits cash before I know whether the mandatory buys landed. Moot given the cut, but it is why Wednesday is the review day.</li>
+<li><strong>The 541-point XI is superseded</strong>, as the sell pass already flagged. The published lineup for this matchday is the 812-point 5-2-3 above.</li>
 </ol>
-<p>Not overridden, and worth being honest about: <strong>the goalkeeper hole stays open.</strong> Philipp/Drewes at 6–7 points where a starting keeper banks ~75 is a ~70-point leak, and the cheapest nailed-on option (Noll, 12.92M) is beyond anything I can raise without a third sale that leaves me an empty slot. Carry the leak this weekend; it's next week's first purchase.</p>
-<hr />
-<h2>D. The one thing that matters most this week</h2>
-<p><strong>Sell Silas and Grifo to Kickbase before 21:55 tonight and get the 7.85M bid on Reis in before it closes — everything else this week is either already decided or can wait, and 46k is a trivial price for turning a 12.90M <em>uncertain</em> midfielder into a 6.60M <em>very likely</em> one with the deficit cleared 22 hours early.</strong></p>
-<h2>2. Sell / Hold</h2>
-<h2>A. Verdict table</h2>
-<p>The binding constraint this week is <strong>squad size, not cash</strong>: 13 players, and a legal XI needs 11 — so I can make <strong>exactly two sales</strong>. Everything below is decided under that limit.</p>
+<p>Confirmed rather than overridden: Gruda stays rejected (best single listing on the board, but 22.5M € on one slot leaves two slots unfillable), and the Guirassy sale is no longer timed to his 19:40 close.</p>
+<h4>The one thing that matters most this week</h4>
+<p>Get all three blind bids placed today at their maximum — every point of this week's plan depends on filling the two empty slots, and a sealed bid you underpriced is a slot you cannot get back on Wednesday.</p></div></details>
+<details class='adv'><summary>Working — Sell / Hold</summary><div class='advbody'><p class='supersede'>One pass's reasoning, before the plan reconciled them. Where this differs from the plan, the plan wins.</p><p><strong>Sell Simpson-Pusey and Guirassy today, both before ~19:40 tonight.</strong> That raises 42.57M €, turns a −11.47M € budget into ~+31.1M € in hand, and gives the buy pass real money while Gruda's auction (ends in 10.0h) is still live. Everything else holds.</p>
+<p>One explicit departure from the legal-XI pass: it fielded Guirassy at 99 pts and called selling Simpson-Pusey alone the cheapest exit — correct under its own constraint, and it flagged the exception ("unless it brings in new players"). That is exactly the case here. I have 2 unfillable slots (−200 pts) plus a 5-point goalkeeper, and 18% of my team value sits in a striker whose curve has stopped climbing. Selling Guirassy costs 99 pts and buys back roughly 175–210 pts across two or three startable slots. The published 541-point XI is superseded once those buys land.</p>
+<p><strong>A. Verdict table</strong></p>
 <div class='tablewrap'><table>
 <thead>
 <tr>
@@ -286,327 +456,319 @@ Numbers are predicted points; <strong>vs</strong> = home match, <strong>at</stro
 </thead>
 <tbody>
 <tr>
-<td>Silas</td>
-<td>2.35M €</td>
-<td>rising +207k/d (+8.82%)</td>
+<td>Simpson-Pusey</td>
+<td>12.46M €</td>
+<td>falling −58k/d (−0.47%)</td>
 <td><strong>SELL NOW</strong></td>
-<td>Tonight, before 22:00</td>
-<td>Broken tibia and fibula — months out, zero points, and the +8.82%/day climb is the market not having repriced the news yet, so the curve is worthless as a reason to wait.</td>
-</tr>
-<tr>
-<td>Grifo</td>
-<td>12.90M €</td>
-<td><strong>cooling</strong> +46k/d, was +129k/d, turns in ~3d</td>
-<td><strong>SELL LATE</strong></td>
-<td>Friday before 20:30</td>
-<td>The only <strong>cooling</strong> player in the squad — top of the arc forming, and the fundamentals agree (Ø116 → Ø104 → Ø71, 21 starts from 33 apps, KB start only <em>uncertain</em> at 57 expected minutes for a 12.90M price tag).</td>
+<td>Monday, immediately</td>
+<td><strong>Falling</strong> and leaking ~406k/week; also my weakest outfield row (65 pts) into a 19%-win away trip at Stuttgart, so there is nothing to wait for.</td>
 </tr>
 <tr>
 <td>Guirassy</td>
-<td>29.82M €</td>
-<td>rising +75k/d (+0.25%), turns in ~12d</td>
-<td><strong>HOLD</strong></td>
-<td>—</td>
-<td>Best predicted score in the squad at 135, home to HSV at 72% win, and the climb is intact.</td>
+<td>30.11M €</td>
+<td>topped out +74k/d (+0.24%)</td>
+<td><strong>SELL NOW</strong></td>
+<td>Monday, before Gruda's auction closes (~19:40)</td>
+<td><strong>Topped out</strong> — not leaking (still +518k/week), so this is opportunity cost, not decay: 30M € parked on 99 pts while four XI slots stand empty. One night of holding is worth ~74k €, a nailed-on 112-pt midfielder is worth far more.</td>
 </tr>
 <tr>
 <td>Uzun</td>
-<td>28.48M €</td>
-<td>rising +98k/d (+0.34%)</td>
+<td>28.78M €</td>
+<td>topped out +72k/d, turns in ~17d</td>
 <td><strong>HOLD</strong></td>
 <td>—</td>
-<td>KB <em>nailed on</em>, 124 predicted, 86 minutes, still rising — nothing to decide.</td>
+<td><strong>Topped out</strong> but flat-to-positive with "turns in ~17d" = no rush; he is my top predicted scorer (128) and nailed on at home.</td>
+</tr>
+<tr>
+<td>Mittelstädt</td>
+<td>26.35M €</td>
+<td>flat +15k/d, −8.8% off 19d peak</td>
+<td><strong>HOLD</strong> — and delist</td>
+<td>Delist today</td>
+<td><strong>Flat</strong>, so no growth, but 127 pts as an attacking full-back into 61% win / 30% CS is my #2 points source. Note: ligainsider omits him from the XI while KB says <em>very likely</em> — I trust KB here. He is currently on the market at 26.35M € with 0 bids under my own name; pull the listing.</td>
 </tr>
 <tr>
 <td>Saibari</td>
-<td>30.14M €</td>
-<td><strong>topped out</strong> −41k/d (−0.14%), −0.4% off 3d peak</td>
+<td>30.12M €</td>
+<td>flat +22k/d</td>
 <td><strong>HOLD-ASSET</strong></td>
 <td>—</td>
-<td>Role bet, not momentum: the drift costs −287k/week (0.95%) against a Room of 2.0x — Bayern pay ~61M for that forward slot versus his 30.14M — so I'm paying roughly 1% a week to hold a ~30M option, and a flat curve is the expected shape of the wait.</td>
-</tr>
-<tr>
-<td>Burcu</td>
-<td>9.12M €</td>
-<td>rising +125k/d (+1.37%), turns in ~11d</td>
-<td><strong>HOLD</strong></td>
-<td>—</td>
-<td>KB <em>very likely</em>, 75 predicted, and +1.37%/day with ~11 days of runway — no reason to touch him.</td>
-</tr>
-<tr>
-<td>Baum</td>
-<td>11.54M €</td>
-<td>rising +153k/d (+1.33%)</td>
-<td><strong>HOLD</strong></td>
-<td>—</td>
-<td>Rising 1.33%/day and KB <em>nailed on</em>; his Ø6 in 25/26 is five substitute cameos, not a bad player — the 2.BL record (33 starts, Ø100) is the real one.</td>
-</tr>
-<tr>
-<td>Simpson-Pusey</td>
-<td>12.60M €</td>
-<td>rising +108k/d (+0.86%), turns in ~12d</td>
-<td><strong>HOLD</strong></td>
-<td>—</td>
-<td>Nailed-on defender, 86 minutes, 73 predicted, climb has ~12 days left.</td>
+<td>Role bet, not a momentum holding: <strong>flat is the expected shape of the wait</strong>, and at +154k/week the wait costs me nothing while the prize is ~31M € of room behind Kane and Díaz. This is the long bet, knowingly — KB has him <em>uncertain</em> (62% start rate historically) and his 108 pts rests on one appearance, so treat this week's points as a coin flip.</td>
 </tr>
 <tr>
 <td>Pejcinovic</td>
-<td>8.28M €</td>
-<td>rising +430k/d (+5.19%)</td>
+<td>9.92M €</td>
+<td>rising +407k/d (+4.10%)</td>
 <td><strong>HOLD</strong></td>
 <td>—</td>
-<td>Steepest sustained climber in the squad at +5.19%/day; the Bayern away fixture kills his points this week but not the value trend.</td>
+<td>Steepest <strong>rising</strong> curve in the squad at +2.85M/week, and nailed on for 99 pts. Selling him would be the single worst trade available.</td>
 </tr>
 <tr>
-<td>Batista Meier</td>
-<td>7.57M €</td>
-<td>rising +240k/d (+3.18%)</td>
+<td>Baum</td>
+<td>12.14M €</td>
+<td>rising +156k/d (+1.29%)</td>
 <td><strong>HOLD</strong></td>
 <td>—</td>
-<td>Held for value, not points — +3.18%/day is a real climb, but he's out of the predicted XI on KB <em>uncertain</em>, so his 43 is soft and he's in my XI by arithmetic, not merit.</td>
+<td><strong>Rising</strong> at +1.09M/week, nailed on, Ø186 last week — points and value at once.</td>
 </tr>
 <tr>
-<td>Vozar</td>
-<td>3.25M €</td>
-<td><strong>accelerating</strong> +323k/d (+9.92%)</td>
+<td>Matsima</td>
+<td>13.40M €</td>
+<td>rising +129k/d (+0.96%), turns in ~15d</td>
 <td><strong>HOLD</strong></td>
 <td>—</td>
-<td>Pure value play — 5 predicted points, no Bundesliga record at all — but selling the squad's only <strong>accelerating</strong> curve to fund a deadline is exactly backwards; he's the first sale the day that word becomes "cooling".</td>
+<td><strong>Rising</strong> and "turns in ~15d", so no urgency despite a poor fixture (28% win at Frankfurt, xBase −7); revisit next week, not this one.</td>
 </tr>
 <tr>
 <td>Chiarodia</td>
-<td>1.74M €</td>
-<td><strong>rebounding</strong> +294k/d (+16.92%), −44.8% off 25d peak</td>
-<td><strong>HOLD</strong></td>
+<td>2.67M €</td>
+<td>rising +215k/d (+8.07%)</td>
+<td><strong>HOLD-ASSET</strong></td>
 <td>—</td>
-<td>Rebounding at +2.06M/week off a 45% drawdown, and "Trainingsrückstand" is a fitness backlog, not a season-ender for a defender with 8 starts last term.</td>
+<td>Out of the squad, 0 pts — but <strong>rising</strong> at +8%/day, i.e. +1.51M/week on a 2.67M € asset. He is doing nothing for my points and a lot for my team value; 2.67M € raises nothing worth having.</td>
 </tr>
 <tr>
 <td>Philipp</td>
 <td>0.50M €</td>
 <td>flat +0k/d</td>
-<td><strong>HOLD</strong></td>
+<td><strong>HOLD</strong> (depth only)</td>
 <td>—</td>
-<td>Doing nothing — 6 predicted points, flat value, no squad depth — but he is my only goalkeeper, so selling him makes a legal XI impossible.</td>
+<td>Honest answer: he does none of the three things — 5 predicted pts, <strong>flat</strong> at +0k/d, and KB rates him <em>unlikely</em>. He stays only because he is my only keeper and 0.50M € changes no plan. If the buy pass lands a real GK, he is a free drop.</td>
 </tr>
 </tbody>
 </table></div>
-<h2>B. Sell queue</h2>
+<p><strong>B. Sell queue</strong></p>
 <div class='tablewrap'><table>
 <thead>
 <tr>
 <th>#</th>
 <th>Player</th>
-<th>When</th>
 <th>Raises</th>
+<th>When</th>
 <th>Budget after</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>1</td>
-<td><strong>Silas</strong></td>
-<td>Tonight, before the 22:00 update</td>
-<td>2.35M €</td>
-<td>−3.55M €</td>
+<td>Simpson-Pusey</td>
+<td><strong>12.46M €</strong></td>
+<td>Monday now — he is falling, every day costs ~58k €</td>
+<td>−11.47M € → <strong>+0.99M €</strong></td>
 </tr>
 <tr>
 <td>2</td>
-<td><strong>Grifo</strong></td>
-<td>Friday 28.08, any time before 20:30</td>
-<td>~12.95M € (12.90M + tonight's +46k)</td>
-<td><strong>+9.50M €</strong> incl. the 0.10M login bonus</td>
+<td>Guirassy</td>
+<td><strong>30.11M €</strong></td>
+<td>Monday before ~19:40 (Gruda auction close)</td>
+<td><strong>+31.10M €</strong></td>
 </tr>
 </tbody>
 </table></div>
-<p>That clears the −5.90M deficit with <strong>9.50M € spare at kickoff</strong>. Only one nightly update (tonight, 22:00) lands before the deadline, so "sell late" is worth exactly one tick — meaningful for nobody in this queue except as free money on Grifo.</p>
-<p><strong>Where I depart from the briefing, and what it costs.</strong> The briefing's optimizer wants Silas + Vozar, which projects 752 points versus 680 for my plan — I'm giving up ~72 points this matchday, and Grifo's own 77 is soft anyway (KB <em>uncertain</em>, 57 expected minutes). I'm paying that because Silas + Vozar raises 5.60M today and only reaches 5.92M against a 5.80M requirement <strong>if Vozar rises again tonight</strong> — 0.12M of headroom resting on a 9.92%/day hype curve with no Bundesliga record under it. If that curve goes flat for one night, I miss the deadline and Kickbase force-sells for me. And on the curve rules the swap is the right way round regardless: Grifo is the squad's only cooling asset, Vozar its only accelerating one.</p>
-<p><strong>Funding the next stage.</strong> Do not bid until Grifo's sale has actually completed — a bid reserves cash the moment it's placed, and I'm negative until then. Once it lands, the 9.40M should go at the <strong>goalkeeper</strong> first: Philipp projects 6 points, while any nailed-on keeper with a clean sheet banks 80. Avoid every listing in the briefing's topping-out table — Ulrich is cooling and turns in ~2 days, Sambi Lokonga and Kimmich have already stopped, and the rest are in outright decline.</p>
-<p><strong>Data I don't trust here.</strong> Saibari's 81 and Vozar's 5 are both ⚠thin-data rows built from positional baselines rather than any Bundesliga record — read them as missing data, not as evidence either way. Saibari is also the one holding worth re-checking weekly: what ends that bet is Bayern signing or promoting another forward, or his KB rating sliding from <em>uncertain</em> to <em>unlikely</em> — not another few days of −41k. Separately, Batista Meier (Paderborn) and Vozar (Schalke) both carry Bundesliga fixtures against a purely 2. Bundesliga history; if those clubs weren't actually promoted, both rows are mispriced at the source.</p>
-<h2>3. Buy targets</h2>
-<p>Using no skill here — this is an advisory read on the briefing, not a code task.</p>
-<h1>Buy targets — Thursday 27.08.2026, 18:46</h1>
-<p><strong>Cash reality first.</strong> I am at −5.90M and <strong>a bid reserves cash the instant it's placed</strong>, so nothing can be bid until the sales settle. Both sales have to happen tonight, and one of them has to happen <em>before</em> 22:00:</p>
+<p>Total raised: <strong>42.57M €</strong>. Deficit is cleared by sale #1 alone, so #2 is a discretionary trade-up, not a forced sale — if the buy pass cannot find at least two startable replacements it actually wants, skip #2 and keep the 99 points.</p>
+<p>Bidding capacity tonight is ~<strong>31.1M €</strong> (login bonus accrues at 100k/day, reaching ~31.5M € by Friday's deadline). Order matters: both sales must settle <em>before</em> any bid, because a bid reserves the cash at placement. That rules out Díaz (53.67M €, closes in 9.4h) at any point this week — he is not fundable and should not be planned around. Gruda (20.97M €, rising +218k/d, nailed on, 112 pts) is the listing driving today's timing; Nusa, Dahmen, Bornauw, Makengo and Vidović all run to Tuesday evening, so there is a second window if tonight's bid fails.</p></div></details>
+<details class='adv'><summary>Working — Buy targets</summary><div class='advbody'><p class='supersede'>One pass's reasoning, before the plan reconciled them. Where this differs from the plan, the plan wins.</p><p><strong>Buy four cheap-to-mid startable players, not one 22M midfielder.</strong> The 31.10M € that the sell pass frees has to fill <em>three</em> empty outfield slots and a legal formation, and Gruda alone would eat 72% of it for one of them. Spreading the same money across Makengo, Vidović, Ljubicic and Rots lands a legal XI worth <strong>~862 predicted points</strong> (vs ~823 for a Gruda-led plan) and buys four <em>rising</em> curves instead of one.</p>
+<p>One explicit note on the sell pass: it named Gruda as the listing driving today's 19:40 timing. I am not buying him (reasoning in B), so nothing closes tonight — but <strong>both sales still happen today anyway</strong>, because the two negotiations below (Ljubicic, Rots) reserve cash the moment they're agreed and I want them opened today while their curves are still cheap. The sales themselves are unchanged.</p>
+<p><strong>Slot math that drives everything:</strong> after the sells I own 4 DEF (one of them Chiarodia, out), 1 MID, 2 FWD, 1 GK = 8 players. Max 5 DEF can be fielded, so I need <strong>at minimum 1 DEF + 1 MID + 1 FWD</strong> to have a legal 5-2-3 at all. Three buys are mandatory, not optional — each missing one is −100.</p>
+<p><strong>1. Vidović (MID, SC Paderborn, 7.30M €) — blind auction, closes Tue ~11:45 (26.1h)</strong>
+Price = value, <strong>rising +156k/d (+2.1%)</strong>, KB <strong>nailed on</strong>, Ø69 in his one Bundesliga match this season, +6.8M € in 30 days. 62 predicted pts at home vs Freiburg. He is the only affordable midfielder on the board who actually starts — my MID line is literally Uzun and nobody. His +6.8M month is visible, so expect competition.
+- <strong>Bid: 8.15M €</strong> (one 22:00 update lands before expiry, so settlement anchors ~7.46M € — that's ≈ +9% over the updated value, not over today's).
+- <strong>Walk-away: 8.50M €.</strong></p>
+<p><strong>2. Makengo (DEF, SC Freiburg, 6.61M €) — blind auction, closes Tue ~21:30 (35.8h) — cheap potential-starter gem</strong>
+<strong>Rising +282k/d = +4.3% per day</strong>, the steepest climb on the market outside the sub-1M punts. KB <strong>very likely</strong>, Ø91 in his opening match, 64 predicted pts away at Paderborn (30% CS). 9.7 pts per million — the best value-per-point on the board. Expiry falls <em>before</em> Tuesday's 22:00 update, so his settlement value is ~6.89M €.
+- <strong>Bid: 7.55M €</strong> (≈ +9.6% over the updated 6.89M €).
+- <strong>Walk-away: 7.90M €.</strong></p>
+<p><strong>3. Ljubicic (FWD, Union Berlin, 4.81M €) — negotiation with Captain Luca, no countdown — cheap potential-starter gem</strong>
+Asking exactly market value. <strong>Accelerating +344k/d (+7.2%/day)</strong> — the fastest riser I can buy, and KB rates him <strong>very likely</strong> to start. Only 44 predicted pts, and that's honest: Union away at Leverkusen is 17% win, and his record is thin (Ø99 from two sub appearances, Ø22 in the 2. Bundesliga). I'm buying him for the third forward slot and the value curve, not for this weekend's score. Do it <strong>today</strong> — at +344k/day, every day of delay costs me ~7%.
+- <strong>Open: 5.15M €</strong> (+7%). <strong>Close up to 5.60M €. Walk-away 5.70M €.</strong>
+- <strong>Angle:</strong> Luca bought Uduokhai (5.33M) and Lippmann (1.00M) this morning — he is raising cash, not dumping a bad asset. Offer instant settlement today and point out that a trip to Leverkusen is a poor showcase week for the player he's trying to sell high.</p>
+<p><strong>4. Rots (DEF, TSG Hoffenheim, asking 8.98M € vs value 9.06M €) — negotiation with Niklas — the flex buy</strong>
+He upgrades Chiarodia's dead defensive slot from <strong>0 → 50 pts</strong>. The genuine hidden-gem profile: <strong>2.5x role room</strong> (Coufal 25.88M, Kabak 22.94M ahead of him), <strong>accelerating +106k/d</strong>, and no scoring record at all — that value is pure expectation and re-rates fast if the role arrives. KB says <em>uncertain</em> (62% historical start rate) and his minutes are guessed, so treat the 50 pts as a coin flip.
+- ⚠ <strong>Data flag:</strong> he is asking <strong>below</strong> market value, which is irrational — he could sell to Kickbase for 9.06M € instantly. Verify the ask in-app before planning around it.
+- <strong>Open at his ask, 8.98M €.</strong> <strong>Cap: whatever cash remains after buys 1–3 settle, never above 9.90M €.</strong></p>
+<p><strong>Insurance line: Nguefack (MID, Gladbach, 0.71M €), blind auction closing Tue ~03:00 (17.4h) — bid 0.75M €.</strong> If the Vidović auction is lost I have no second midfielder and no legal formation, which is a −100 slot. 750k € to remove that risk is free money; if I win both he sits on the bench harmlessly.</p>
+<h4>Rejected</h4>
+<ul>
+<li><strong>Gruda (20.97M €, 112 pts, rising, nailed on)</strong> — the best single listing on the board, and I'm still passing. 22.5M € for one slot leaves ~8.6M € to fill the other two, which forces sub-1M fillers into them. Gruda-led = ~823 XI pts and +1.5M €/week of value growth; the four-buy plan = ~862 pts and <strong>+6.2M €/week</strong>. He wins the player comparison and loses the budget comparison.</li>
+<li><strong>Bornauw (11.02M €, 73 pts)</strong> — <strong>topped out at −8k/d after +10.5M € in 30 days</strong>, and his actual record is Ø48/Ø60 with a −34 last week. That 73 is fixture points, not the player. Buying the top of that arc.</li>
+<li><strong>Nusa (26.18M €, 112 pts)</strong> — same predicted points as Gruda for 5.2M € more and a <strong>topped-out</strong> curve. Strictly dominated.</li>
+<li><strong>Dahmen (16.11M €, 81 pts)</strong> — the +76 pts over Philipp is the single biggest per-slot upgrade available, but it doesn't fit: I'd own two keepers and only nine outfield players, i.e. an empty slot (−100) that cancels it. He's also <strong>falling −124k/d</strong>. Revisit next week once the outfield is legal.</li>
+<li><strong>Tah (35.93M €)</strong> — unaffordable, and <strong>falling −321k/d</strong> with KB nailed-on contradicting his omission from the published XI. No.</li>
+</ul>
+<h4>Swap check (my three most expensive after the sells)</h4>
 <div class='tablewrap'><table>
 <thead>
 <tr>
-<th>Step</th>
-<th>Action</th>
-<th>Budget after</th>
+<th>Mine</th>
+<th>Closest market alternative</th>
+<th>Verdict</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>1</td>
-<td>Sell <strong>Silas</strong> (2.35M)</td>
-<td>−3.55M</td>
+<td><strong>Saibari 30.12M €</strong> (108 pts, flat, role bet)</td>
+<td><strong>Nusa 26.18M €</strong> (112 pts)</td>
+<td><strong>No swap.</strong> A 4-point gap is pure noise, and I'd be trading a flat 2.0x role bet behind Kane and Díaz for a <strong>topped-out</strong> curve. It also converts a forward into a midfielder, and forwards are the position I'm short of.</td>
 </tr>
 <tr>
-<td>2</td>
-<td>Sell <strong>Grifo</strong> now, before 22:00 (12.90M)</td>
-<td><strong>+9.35M</strong></td>
+<td><strong>Uzun 28.78M €</strong> (128 pts, topped out, turns in ~17d)</td>
+<td><strong>Gruda 20.97M €</strong> (112 pts, rising +218k/d)</td>
+<td><strong>No swap</strong> — but this is the closest call on the page. It would free ~6M € and improve the curve by ~1M €/week for a 16-point cost (within noise). I reject it on execution risk: Gruda is a <em>blind</em> auction, so I'd either sell 128 nailed-on points before knowing I've won the replacement, or tie up the whole budget holding both. Uzun also has Ø106 across 15 starts against Gruda's ⚠thin data.</td>
+</tr>
+<tr>
+<td><strong>Mittelstädt 26.35M €</strong> (127 pts, flat)</td>
+<td><strong>Tah 35.93M €</strong> (137 pts)</td>
+<td><strong>No swap.</strong> 9.6M € more for 10 points, and Tah is falling −321k/d. Confirming the sell pass: <strong>delist Mittelstädt today</strong> — he's sitting on the market under my own name at 26.35M € with 0 bids, and he's my #2 points source.</td>
 </tr>
 </tbody>
 </table></div>
-<p>Selling Grifo tonight instead of Friday forfeits exactly <strong>46k</strong> (one nightly tick on a cooling curve). Pay it. The best auction on the board expires ~22:10 and I cannot bid into it with a negative balance — 46k buys the only thing that matters, cash that is live before the countdown.</p>
-<p>That is the whole funding chain: <strong>Silas + Grifo pay for every bid below.</strong> Nothing here is financed by money that arrives later.</p>
 <hr />
-<h2>A. Buy targets</h2>
-<h3>1. Reis — MID, SV Werder Bremen — <strong>primary buy</strong></h3>
-<ul>
-<li><strong>Price 6.60M € = value 6.60M €</strong> (Kickbase blind auction, <strong>ends ~22:10 tonight, 3.4h</strong>)</li>
-<li><strong>75 predicted pts, KB start: <em>very likely</em>, 79 min</strong> — and ligainsider agrees he starts. No source conflict.</li>
-<li><strong>This is a straight like-for-like on the man I'm selling.</strong> Grifo: 12.90M, 77 predicted, KB only <em>uncertain</em>, 57 minutes. Reis: 6.60M, 75 predicted, <em>very likely</em>, 79 minutes. Same points, half the price, better start certainty.</li>
-<li><strong>Curve: rebounding +371k/d (+5.6%/day)</strong> off a −1.95M 30-day drawdown. That is the "value crashed, now re-rating" pattern, not a crowded steep riser priced-in for weeks.</li>
-<li>Fixture is <em>bad</em> — away at Freiburg, 26% win, 23% CS — so the 75 is what he does with a poor matchup, not a flattered number.</li>
-<li><strong>Bid: 7.85M €.</strong> Expiry lands minutes after the 22:00 update, so this settles against ~6.97M post-update, not 6.60M — 7.85M is <strong>+12.6% over the price that actually matters</strong> (and +19% over today's sticker, which is why the number looks big). The league anchor is AlexG paying 11.53M for a 10.58M Minjae, <strong>+9.0%</strong>, so +12.6% clears the only real comparable I have with margin.</li>
-<li><strong>Walk-away: 8.10M €.</strong> Above that the price-per-point stops beating Mane below.</li>
-<li><strong>Caveat, stated plainly:</strong> his entire record is 2. Bundesliga (Ø130 / Ø106 / Ø81) at a Bundesliga club. The model discounts 2.BL output 15%, but he has no top-flight sample. That is the risk I'm paying 7.85M for.</li>
-</ul>
-<h3>2. Mane — DEF, Borussia Dortmund — <strong>cheap potential-starter gem / fallback</strong></h3>
-<ul>
-<li><strong>Price 3.60M € = value</strong> (Kickbase blind auction, <strong>ends ~02:22 Friday, 7.6h</strong>)</li>
-<li><strong>55 predicted pts</strong> on the <strong>best fixture on the board</strong>: home vs HSV, <strong>72% win, 38% clean sheet</strong>. A defender who starts and gets that clean sheet banks 5+10+15+30 = 60 before he touches the ball.</li>
-<li><strong>Curve: rebounding +145k/d (+4.0%/day)</strong>, value flat-to-recovering, no hype, zero visible demand. 3.60M for a starting BVB defender is the cheapest real upside here.</li>
-<li><strong>Source conflict, and I'm calling it:</strong> ligainsider has him in the predicted XI, <strong>KB says <em>uncertain</em></strong> (62% historical start rate). Per the rules I trust KB — so read 55 as already minutes-weighted, not as a nailed-on floor. He is also ⚠thin data (2 starts / 4 apps, Ø12): the 55 is a positional baseline on a great fixture, which is missing data, not evidence against him.</li>
-<li><strong>Bid: 4.05M €</strong> (+12.5% today, +8% over the ~3.75M post-update value — he draws less attention than Reis, so a thinner margin is right).</li>
-<li><strong>Walk-away: 4.30M €.</strong></li>
-<li><strong>Sequencing bonus:</strong> Reis settles at 22:10, Mane at 02:22. If the Reis bid loses, the 7.85M is released <strong>in time</strong> to bid on Mane. So this is a genuine fallback, not a second commitment — I never need cash for both.</li>
-</ul>
-<h3>3. Drewes — GK, Borussia Dortmund — <strong>0.50M flyer, optional</strong></h3>
-<ul>
-<li><strong>0.50M € at the value floor, flat +0k/d, zero hype</strong>, manager-listed (KevDerChef, negotiation — no countdown).</li>
-<li>21 Bundesliga starts at <strong>Ø76</strong> in 24/25. A proven top-flight keeper parked at the 500k floor is pure asymmetric optionality: if BVB's number one goes down, a 500k asset re-rates into eight figures.</li>
-<li><strong>No points this week</strong> (7 predicted, KB <em>unlikely</em>) — he does not fix my goalkeeper slot. Buy him as a lottery ticket in a free squad slot, not as an XI move.</li>
-<li><strong>Offer 0.60M €, walk away at 0.70M.</strong> At the floor the seller gets exactly 0.50M from Kickbase, so 100k over is a real incentive for him and nothing to me.</li>
-</ul>
-<p><strong>Watching, not buying:</strong> <strong>Günter</strong> (Freiburg DEF, 5.82M ask / 6.06M value, <strong>Room 2.2x</strong> — Freiburg pay 13.57M for that slot, and he has 27 starts at Ø74 behind him, rising +277k/d) is the best role-inheritance bet on the board, but he's out of the predicted XI on KB <em>uncertain</em> and manager-owned, and 6.5M+ doesn't fit alongside Reis. First target next week. <strong>Machino</strong> (2.88M ask against 4.05M value, +7%/day) is nominal 29% arbitrage — see the data flag below before acting on it.</p>
-<hr />
-<h2>B. Rejected</h2>
-<ul>
-<li><strong>Ulrich</strong> (7.15M, nailed on, 66 pts) — the obvious cheap starter, and the trap. <strong>Cooling +274k/d, down from +832k/d, turns in ~2 days.</strong> Paying 7.15M+ buys next week's lower value.</li>
-<li><strong>Nicolas</strong> (18.74M GK, 81 pts) — would fix my worst slot on paper, but <strong>falling −141k/d</strong> and away at RB Leipzig with an <strong>11% clean-sheet</strong> chance; a keeper's score is the clean sheet. Unaffordable anyway.</li>
-<li><strong>Bischof</strong> (22.79M) — <strong>falling −107k/d</strong>, KB <em>doubtful</em>, <strong>16 expected minutes</strong>. Worst price-per-minute on the board.</li>
-<li><strong>Kimmich</strong> (59.87M, 187 pts) — the highest-scoring listing and I'm still not going there: <strong>topped out</strong> (+12k/d, turns in ~6d) and 50M beyond my budget without gutting the squad.</li>
-<li><strong>Sambi Lokonga</strong> (10.89M, <strong>topped out</strong>) and <strong>Brackelmann</strong> (4.14M, <strong>falling −118k/d, −54% off his 27-day peak</strong>) — both are bids on a declining asset; Brackelmann expires in 2h, let it go.</li>
-<li><strong>Heuer Fernandes</strong> (14.37M ask vs 15.17M value) — away at BVB, 8% clean sheet, and the below-value ask is itself a red flag (see below).</li>
-</ul>
-<hr />
-<h2>C. Swap check — my three most expensive</h2>
-<p><strong>Saibari (30.14M, topped out −41k/d, 81 pts, NOT in predicted XI, KB <em>uncertain</em>)</strong>
-Closest same-tier listing: <strong>Moreira</strong> (Leverkusen FWD, 24.51M, Kickbase, 15.5h) — <strong>98 predicted, KB <em>nailed on</em>, 86 minutes, rising +194k/d, +6.52M in 30 days.</strong> On the table this beats Saibari outright: 5.6M cheaper, +17 points, and the curve flips from −41k/d to +194k/d. The decisive difference is that Moreira <em>plays</em> and Saibari has not won his role. Both are ⚠thin data, so it's one baseline swapped for another — but a baseline over 86 minutes beats a baseline over 57.
-<strong>Verdict: no swap this week, on sequencing.</strong> Moreira is a <strong>blind auction</strong> and I'd need ~26.5M (+8%), which means selling Saibari <em>first</em> and then bidding — the exact order the rules warn against. Lose that blind bid and I'm holding 33M in cash, a squad of 10, and a −100 empty slot ten hours from kickoff. This is the trade to make the moment Saibari appears in a market I can buy into before I sell — and Moreira is the reason to re-check Saibari's KB rating every day, not in a month.</p>
-<p><strong>Guirassy (29.82M, rising +75k/d, 135 pts, home vs HSV 72% win)</strong>
-Nearest alternatives are Moreira at 24.51M (98) and Burger at 24.29M (104) — both meaningfully worse, and there is nothing at all between 24.51M and Kimmich's 59.87M.
-<strong>Verdict: no swap.</strong> Best predicted score in the squad, best fixture, curve intact with ~12 days of runway.</p>
-<p><strong>Uzun (28.48M, rising +98k/d, 124 pts, KB <em>nailed on</em>)</strong>
-Closest: <strong>Burger</strong> (24.29M, 104 pts, nailed on, rising +119k/d, manager-listed by AlexG). 4.2M cheaper for 20 fewer predicted points — <strong>20 points is inside the ~50-point noise band, so that's points-neutral</strong>, which means I'd be paying an 8–15% negotiation premium to a rival for nothing. AlexG also owns Olise; he has no reason to discount.
-<strong>Verdict: no swap.</strong></p>
-<hr />
-<h2>Total cash the buy programme needs</h2>
-<ul>
-<li><strong>Primary path:</strong> Reis <strong>7.85M</strong> + Drewes <strong>0.60M</strong> = <strong>8.45M €</strong> of the 9.35M available. Budget at Friday 20:30 kickoff: <strong>+1.00M €</strong> (0.90M + 0.10M login). ✔</li>
-<li><strong>Fallback if the Reis bid loses:</strong> Mane <strong>4.05M</strong> + Drewes <strong>0.60M</strong> = <strong>4.65M</strong>. Kickoff budget <strong>+4.80M €</strong>. ✔</li>
-<li><strong>Maximum exposure at any single moment: 8.45M against 9.35M.</strong> The budget never goes negative and never depends on a sale that hasn't completed.</li>
-</ul>
-<hr />
-<h2>Data I don't trust</h2>
-<ol>
-<li><strong>Nine manager listings are priced <em>below</em> market value</strong> (Hložek 10.62 vs 10.77, Heuer Fernandes 14.37 vs 15.17, Machino 2.88 vs 4.05, Günter, Stange, Leszczynski, Darvich, Mickelson, Zeitler). No manager rationally does this — he can sell to Kickbase at full value instantly. <strong>Treat those asks as non-executable and market value as the floor</strong>, expecting +5–15% on top. Verify Machino's 2.88M in-app before treating it as arbitrage; if it really executes, it's 1.17M of free value.</li>
-<li><strong>Paderborn / Elversberg / Schalke rows carry Bundesliga fixtures against purely 2. Bundesliga histories</strong> — Ulrich, Noll, Pieringer, Zeitler, and my own Batista Meier and Vozar. Pieringer even shows a 26/27 <em>2.BL</em> row next to a 25/26 <em>BL</em> row. The source may be mixing divisions; every prediction on those rows is suspect.</li>
-<li><strong>My goalkeeper hole cannot be fixed this week, and I'm not pretending otherwise.</strong> Philipp projects 6 points where a starting keeper banks ~70–80 — a ~70-point leak. The cheapest nailed-on starter is <strong>Noll at 12.92M</strong>, 3.6M beyond the 9.35M I'll have, and he's a manager negotiation that may not even close by 20:30. Forcing it would mean a third sale, and the arithmetic breaks: selling Batista Meier for a keeper leaves me with two GKs and only nine outfield players — one empty slot, −100 points, worse than the leak. <strong>Carry the 6-point keeper this weekend; the GK upgrade is next week's first purchase</strong>, funded by the value the squad's rising curves accrue.</li>
-</ol>
-<h2>4. Starting XI</h2>
-<h2>A. The XI — as the squad stands (after the decided sales)</h2>
-<p><strong>Formation 3-4-3 — projected 680 points</strong></p>
+<p><strong>Total cash the programme needs: 29.83M € at opening prices</strong> (Vidović 8.15 + Makengo 7.55 + Ljubicic 5.15 + Rots 8.98), <strong>30.58M € including the Nguefack insurance bid</strong>. Available: <strong>31.10M €</strong> after both sells, plus 0.40M € of login bonuses by Friday.</p>
+<p><strong>Hard cap: total buy spend must not exceed 31.10M €.</strong> The login bonuses arrive one per day and bids reserve cash <em>at placement</em>, so I cannot spend them in advance — Friday's 100k lands after the 20:30 deadline is already decided. If all three auction bids run to their walk-aways (22.00M €), Rots is capped at 9.10M €, not 9.90M €.</p>
+<p><strong>Order of operations (each bid must be funded by a sale that has already completed):</strong>
+1. <strong>Today, first:</strong> sell Simpson-Pusey (12.46M € → budget +0.99M €), then Guirassy (30.11M € → <strong>+31.10M €</strong>). Delist Mittelstädt.
+2. <strong>Today, after the cash lands:</strong> blind bids on Vidović (8.15M €), Makengo (7.55M €), Nguefack (0.75M €). 16.45M € reserved, <strong>14.65M € free</strong>.
+3. <strong>Today:</strong> open Ljubicic with Captain Luca at 5.15M €. → <strong>~9.50M € free.</strong>
+4. <strong>Today/Tuesday:</strong> open Rots with Niklas at his 8.98M € ask, capped by whatever is actually left. → <strong>~0.5–1.3M € buffer at Friday's deadline.</strong></p>
+<p>If Ljubicic falls through, the forward slot has no good replacement — switch shape to 5-3-2 and let Nguefack take the third midfield slot (~773 pts instead of 812). If Rots falls through, Chiarodia fills the fifth defensive slot at 0 pts and I keep the ~9M € for next week's market, when Dahmen becomes affordable.</p></div></details>
+<details class='adv'><summary>Working — Starting XI</summary><div class='advbody'><p class='supersede'>One pass's reasoning, before the plan reconciled them. Where this differs from the plan, the plan wins.</p><p><strong>A. The XI — 4-3-3, projected 541 points</strong></p>
+<p>This is the squad as it stands, after the forced sale. The budget is 11.07M € short, and <strong>Simpson-Pusey (65 pts) is the player it costs me</strong> — his 12.46M € clears the deficit on its own. Without that constraint the same nine would be a 5-3-3 shape worth 606, but that eleven cannot be fielded.</p>
 <div class='tablewrap'><table>
 <thead>
 <tr>
 <th>Line</th>
 <th>Players</th>
-<th>Pred.</th>
+<th>Pts</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><strong>GK</strong></td>
-<td>Philipp</td>
-<td>6</td>
+<td>Philipp (5)</td>
+<td>5</td>
 </tr>
 <tr>
 <td><strong>DEF</strong></td>
-<td>Baum 74 · Simpson-Pusey 73 · Chiarodia 0</td>
-<td>147</td>
+<td>Mittelstädt (127), Baum (96), Matsima (79), Chiarodia (0)</td>
+<td>302</td>
 </tr>
 <tr>
 <td><strong>MID</strong></td>
-<td>Uzun 124 · Burcu 75 · Batista Meier 43 · Vozar 5</td>
-<td>247</td>
+<td>Uzun (128) — 2 slots empty</td>
+<td>128 − 200</td>
 </tr>
 <tr>
 <td><strong>FWD</strong></td>
-<td>Guirassy 135 · Saibari 81 · Pejcinovic 64</td>
-<td>280</td>
+<td>Saibari (108), Guirassy (99), Pejcinovic (99)</td>
+<td>306</td>
 </tr>
 <tr>
 <td></td>
 <td><strong>Total</strong></td>
-<td><strong>680</strong></td>
+<td><strong>541</strong></td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>This XI has no choices in it.</strong> After the two sales the squad is exactly eleven, and with only three defenders on the books the 3-4-3 is the single legal shape. Chiarodia (<em>Nicht im Kader</em>, 0 pts) and Vozar (KB <em>unlikely</em>, 5 pts) are in the eleven because a dead slot beats a −100 empty slot, not because they earn it.</p>
-<p><strong>What the forced sale costs me: Grifo (77).</strong> The briefing's own cheapest-in-points exit is Silas + Vozar, which keeps Grifo and projects <strong>752</strong>. The sell stage swapped Vozar for Grifo, and I'm holding that line — see B.</p>
-<p>Live in this XI are only five players with secure minutes: Uzun (<em>nailed on</em>, 86 min), Baum (<em>nailed on</em>, 86), Simpson-Pusey (<em>nailed on</em>, 86), Burcu (<em>very likely</em>, 79) and Guirassy (<em>very likely</em>, 79). Saibari's 81 is a thin-data baseline over 57 minutes with KB <em>uncertain</em> and no predicted-XI slot — treat it as the softest big number on the sheet, and Batista Meier's 43 the same way.</p>
-<h2>B. The alternatives I rejected</h2>
-<p><strong>B1 — keep Grifo, sell Silas + Vozar: 752 (+72).</strong> Rejected on cash, not on football. Silas 2.35M + Vozar 3.25M = <strong>5.60M today against a 5.80–5.90M deficit</strong>. It only reaches the briefing's 5.92M if Vozar's <strong>+9.92%/day</strong> curve ticks once more tonight — 0.12M of headroom on a hype curve attached to a player with no Bundesliga record at all. If that curve goes flat for one night I'm negative at the first kickoff and Kickbase force-sells for me, and it does not politely pick Chiarodia. Risking a 135-point Guirassy to gain 72 is a bad trade.</p>
-<p><strong>B2 — sell Silas + Batista Meier instead of Grifo: 714 (+34), and cash-safe (9.92M raised, no tick needed).</strong> This is the genuinely tempting one and I'm still not taking it. It leaves 4.12M, which kills the Reis bid (7.85M) and funds only Mane — best case ~769 this week, versus 751 on the Reis path. <strong>18 points apart is inside the ±50 noise band</strong>, so I decide it on the assets instead: B2 keeps the squad's only <em>cooling</em> player and sells a <em>riser</em>, and I'd still be selling Grifo next week at a lower price. Grifo out now, Reis in, is the same points and the better book.</p>
-<h2>If the earlier stages' transfers land</h2>
-<p><strong>Reis (7.85M) + Drewes (0.60M) — 3-4-3, 751 points</strong></p>
-<ul>
-<li><strong>GK</strong> Drewes (7) — starts over Philipp (6) purely as the larger of two zeros; either is a ~70-point leak I can't fix this week.</li>
-<li><strong>DEF</strong> Baum (74) · Simpson-Pusey (73) · Chiarodia (0)</li>
-<li><strong>MID</strong> Uzun (124) · <strong>Reis (75)</strong> · Burcu (75) · Batista Meier (43)</li>
-<li><strong>FWD</strong> Guirassy (135) · Saibari (81) · Pejcinovic (64)</li>
-<li><strong>Vozar benched.</strong> Reis replaces him one-for-one: +70 points, and the Grifo→Reis swap recovers essentially all of B1's 72 without the deadline gamble.</li>
-</ul>
-<p><strong>Fallback, Reis bid lost → Mane (4.05M) + Drewes — 3-4-3, 736 points</strong>
-Drewes (7) · Baum (74), Simpson-Pusey (73), <strong>Mane (55)</strong> · Uzun (124), Burcu (75), Batista Meier (43), Vozar (5) · Guirassy (135), Saibari (81), Pejcinovic (64). <strong>Chiarodia drops out</strong> — Mane's 55 replaces a dead 0, which is the single biggest slot upgrade available to me this week. Caveat: KB rates Mane <em>uncertain</em> against ligainsider's predicted XI, and per the rules I trust KB, so the 55 is already minutes-weighted, not a floor.</p>
-<h2>C. Variance stance</h2>
-<p>Every manager sits on 0 season points, so there is no lead to protect — the table is the projection, and it puts me <strong>5th of 10 at 680, with AlexG at 965 and Coach David 4th at 784</strong>. I am chasing, not holding: AlexG is 285 ahead on projection and Coach David is the 104-point gap I can actually close this weekend. That argues for differentials and variance — but <strong>my as-it-stands XI offers none, because it is forced</strong>: eleven players, one legal formation, four slots (Philipp, Chiarodia, Vozar, Batista Meier) that are arithmetic rather than football. All of this week's variance therefore lives in the transfer stage, which is exactly the right place for it: Reis at half Grifo's price with better start certainty, and Mane as a 3.60M defender on the best fixture on the board (72% win, 38% CS). Guirassy and Uzun are my two high-floor anchors and I've kept both; the risk I'm deliberately <em>not</em> taking is B1's 0.12M cash gamble, because a force-sale on matchday 1 is the one outcome that puts me behind AlexG in a way this squad can't recover from.</p>
-<p><strong>Data I don't trust:</strong> the deficit is quoted as 5.80M by the briefing and 5.90M by the sell stage — verify the real number in-app before the 22:00 update, because B1's whole case turns on 0.1M. Batista Meier (Paderborn) and Vozar (Schalke) both show Bundesliga fixtures against purely 2. Bundesliga histories, so their 43 and 5 may be mispriced at the source; both are in the XI regardless, so it changes nothing I can act on.</p></div>
+<p>Three things in that XI are damage limitation, not selection:
+- <strong>Chiarodia starts at 0.</strong> He is <em>nicht im Kader</em>, so he scores nothing — but nothing beats −100. Same logic for <strong>Philipp</strong>: 5 predicted points off 6 expected minutes, KB rates him <em>unlikely</em>, and he is effectively a −95-point slot wearing a shirt. He plays because he is my only keeper.
+- <strong>Mittelstädt is in despite ligainsider omitting him</strong> from Stuttgart's predicted XI. KB says <em>very likely</em>, and per the briefing's own validation that rating has been in the XI 100% of the time. I trust KB over the scrape here — same call the sell pass made.
+- <strong>Saibari is a coin flip, and he plays anyway.</strong> KB <em>uncertain</em>, not in the published XI, range 0–178 off one appearance. I have exactly three forwards, so there is no decision to make — but do not read his 108 as banked.</p>
+<p>The two empty midfield slots are the whole story: −200 points, and no player in the squad can fill them.</p>
+<p><strong>B. The alternative I rejected — 527 points</strong></p>
+<p>Clear the deficit by selling <strong>Matsima (13.40M €, 79 pts)</strong> instead and keep Simpson-Pusey. Same 4-3-3, defence becomes Mittelstädt–Baum–Simpson-Pusey–Chiarodia: <strong>527</strong>. The margin is only 14 points — pure noise on a single matchday — but Simpson-Pusey is <em>falling</em> −58k/d while Matsima is <em>rising</em> +129k/d, so the tiebreak goes to the sell pass's verdict and I lose the cheaper asset.</p>
+<p>Further down: keeping both defenders and selling <strong>Guirassy</strong> alone forces a 5-3-2 (only two forwards left) worth <strong>507</strong>. That is 34 points worse <em>as a lineup</em> — which is precisely why the sell pass sells Guirassy for the buys, not for the budget.</p>
+<p><strong>C. Variance stance</strong></p>
+<p>I am chasing, and chasing badly. I sit 8th on 689. The realistic target is <strong>KalleDieKralle (791, +102)</strong> with <strong>Niklas (847, +158)</strong> behind him; AlexG's 1140 is 451 clear and is not a one-matchday problem. At 541 I do not close that gap — KalleDieKralle projects 869 this week, so the affordable XI loses another ~330 and I fall to arm's length of last. That reframes the whole lineup: with the current squad I am not choosing between safe and risky picks, I am choosing between playing and forfeiting two slots. Every high-variance element in the XI — Saibari's 0–178, Chiarodia's zero, Philipp's six minutes — is forced, not chosen. Given I am behind, that suits me: Saibari's upside tail is exactly the kind of differential a chaser needs, and I would keep him even with a choice. The genuine defensive concern is <strong>Paule (636, −53)</strong>, who projects 622 this week and passes me comfortably if I field 541. That is the argument for executing the buys rather than sitting tight.</p>
+<hr />
+<p><strong>If the earlier stages' transfers land — 5-2-3, projected 862 points</strong></p>
+<p>Every one of the four buys changes the XI; three of them are what make it legal at all.</p>
+<div class='tablewrap'><table>
+<thead>
+<tr>
+<th>Line</th>
+<th>Players</th>
+<th>Pts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GK</strong></td>
+<td>Philipp (5)</td>
+<td>5</td>
+</tr>
+<tr>
+<td><strong>DEF</strong></td>
+<td>Mittelstädt (127), Baum (96), Matsima (79), <strong>Makengo (64)</strong>, <strong>Rots (50)</strong></td>
+<td>416</td>
+</tr>
+<tr>
+<td><strong>MID</strong></td>
+<td>Uzun (128), <strong>Vidović (62)</strong></td>
+<td>190</td>
+</tr>
+<tr>
+<td><strong>FWD</strong></td>
+<td>Saibari (108), Pejcinovic (99), <strong>Ljubicic (44)</strong></td>
+<td>251</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>Total</strong></td>
+<td><strong>862</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Guirassy's 99 points leave with him; Vidović and Makengo alone return more than that, and the two −100 slots disappear. <strong>Chiarodia drops to the bench</strong> — the first genuine selection choice I get all week, and an easy one at 0 pts. Nguefack, if the insurance bid wins, sits out: a third midfielder only enters if Rots fails, and Rots' 50 beats a 0.71M € Gladbach squad player even with <em>uncertain</em> minutes.</p>
+<p>Partial outcomes, so the shape is decided in advance rather than at 20:29 on Friday:
+- <strong>Rots fails</strong> → Chiarodia returns as the fifth defender, <strong>812</strong>.
+- <strong>Ljubicic fails</strong> → 5-3-2 with Nguefack in midfield, <strong>~773</strong>.
+- <strong>All four fail and both sells still went through</strong> → 8 players, three empty slots, <strong>342</strong>. That is the real risk in this week's plan, and it is why at least three buys are mandatory rather than opportunistic.</p>
+<p>At 862 I roughly hold station with KalleDieKralle (869) instead of shipping 330 to him, and I comfortably clear Paule. That is the difference between this week costing me the season and this week being survivable.</p></div></details></div>
 
-<h2>Squad — predicted points, matchday 1</h2>
+<h2>Model check — matchday 1</h2>
+<p class="note">Average error per player against what they really scored, on the last forecast
+made before kickoff. Lower is better; the baselines are what the model has to beat.</p>
+
+<div class="scorecard">
+<div class='sc'><div class='sclabel'>Model</div><div class='scnum win'>40.7 MAE</div></div>
+<div class='sc'><div class='sclabel'>ØPts baseline</div><div class='scnum'>49.6 MAE</div></div>
+<div class='sc'><div class='sclabel'>50/50 blend</div><div class='scnum'>43.2 MAE</div></div>
+
+<div class='sc'><div class='sclabel'>Players</div><div class='scnum'>44<span class='scsub'>34 compared</span></div></div>
+</div>
 <div class="tablewrap"><table class="data">
-<tr><td class='name'>Guirassy<span class='sub'>FWD · Borussia Dortmund · H HSV</span></td><td class='num'>29,82 M€</td><td class='num up' title='last 3 days +75k/day (+0.25%/day), 7 days before that +107k/day — rise reaches zero in about 12 days'>+624k<span class='sub up'>rising</span></td><td class='num pred' title='79 min expected'>135</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
-<tr><td class='name'>Uzun<span class='sub'>MID · Eintracht Frankfurt · A FCU</span></td><td class='num'>28,48 M€</td><td class='num up' title='last 3 days +98k/day (+0.34%/day), 7 days before that +93k/day'>+654k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>124</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Saibari<span class='sub'>FWD · FC Bayern München · H VFB</span></td><td class='num'>30,14 M€</td><td class='num up' title='last 3 days -41k/day (-0.14%/day), 7 days before that +74k/day'>+152k<span class='sub warn'>topped out</span></td><td class='num pred' title='57 min expected — no Bundesliga history — positional baseline'>81 *</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
-<tr><td class='name'>Grifo<span class='sub'>MID · SC Freiburg · H SVW</span></td><td class='num'>12,90 M€</td><td class='num up' title='last 3 days +46k/day (+0.36%/day), 7 days before that +129k/day — rise reaches zero in about 3 days'>+580k<span class='sub warn'>cooling</span></td><td class='num pred' title='57 min expected'>77</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
-<tr><td class='name'>Burcu<span class='sub'>MID · 1. FC Union Berlin · H SGE</span></td><td class='num'>9,12 M€</td><td class='num up' title='last 3 days +125k/day (+1.37%/day), 7 days before that +179k/day — rise reaches zero in about 11 days'>+1.105k<span class='sub up'>rising</span></td><td class='num pred' title='79 min expected'>75</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
-<tr><td class='name'>Baum<span class='sub'>DEF · Eintracht Frankfurt · A FCU</span></td><td class='num'>11,54 M€</td><td class='num up' title='last 3 days +153k/day (+1.33%/day), 7 days before that +189k/day'>+1.105k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>74</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Simpson-Pusey<span class='sub'>DEF · 1. FC Köln · H TSG</span></td><td class='num'>12,60 M€</td><td class='num up' title='last 3 days +108k/day (+0.86%/day), 7 days before that +154k/day — rise reaches zero in about 12 days'>+920k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>73</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Pejcinovic<span class='sub'>FWD · VfB Stuttgart · A FCB</span></td><td class='num'>8,28 M€</td><td class='num up' title='last 3 days +430k/day (+5.19%/day), 7 days before that +403k/day'>+2.844k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>64</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Batista Meier<span class='sub'>MID · SC Paderborn 07 · A M05</span></td><td class='num'>7,57 M€</td><td class='num up' title='last 3 days +240k/day (+3.18%/day), 7 days before that +236k/day'>+1.880k<span class='sub up'>rising</span></td><td class='num pred' title='57 min expected'>43</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
-<tr><td class='name'>Philipp<span class='sub'>GK · TSG Hoffenheim · A KOE</span></td><td class='num'>0,50 M€</td><td class='num ' title='last 3 days +0k/day (+0.00%/day), 7 days before that +0k/day'>+0k<span class='sub '>flat</span></td><td class='num pred' title='6 min expected — Kickbase rates him unlikely to start; only 6 apps — shrunk toward baseline'>6 *</td><td class='status bench' title='Kickbase start rating: unlikely'>OUT</td></tr>
-<tr><td class='name'>Vozar<span class='sub'>MID · FC Schalke 04 · A FCA</span></td><td class='num'>3,25 M€</td><td class='num up' title='last 3 days +323k/day (+9.92%/day), 7 days before that +255k/day'>+2.384k<span class='sub up'>accelerating</span></td><td class='num pred' title='6 min expected — Kickbase rates him unlikely to start; no Bundesliga history — positional baseline'>5 *</td><td class='status bench' title='Kickbase start rating: unlikely'>OUT</td></tr>
-<tr><td class='name'>Silas<span class='sub'>FWD · 1. FSV Mainz 05 · H SCP</span></td><td class='num'>2,35 M€</td><td class='num up' title='last 3 days +207k/day (+8.82%/day), 7 days before that +175k/day'>+1.639k<span class='sub up'>rising</span></td><td class='num pred' title='0 min expected — injured/suspended'>0</td><td class='status out' title=''>✚ Verletzung</td></tr>
-<tr><td class='name'>Chiarodia<span class='sub'>DEF · Borussia Mönchengladbach · A RBL</span></td><td class='num'>1,74 M€</td><td class='num up' title='last 3 days +294k/day (+16.92%/day), 7 days before that -42k/day'>+900k<span class='sub up'>rebounding</span></td><td class='num pred' title='0 min expected — injured/suspended'>0</td><td class='status out' title=''>✚ Nicht im Kader</td></tr>
+<tr class="hdr"><th>Biggest misses</th><th class="num">said</th><th class="num">scored</th><th class="num">off by</th></tr>
+<tr><td class='name'>Dallinga<span class='sub'>30 min played</span></td><td class='num'>5</td><td class='num pred'>238</td><td class='num up'>+233</td></tr><tr><td class='name'>Guirassy<span class='sub'>31 min played</span></td><td class='num'>135</td><td class='num pred'>5</td><td class='num down'>-130</td></tr><tr><td class='name'>Mane<span class='sub'>89 min played</span></td><td class='num'>55</td><td class='num pred'>-62</td><td class='num down'>-117</td></tr><tr><td class='name'>Machino<span class='sub'>99 min played</span></td><td class='num'>10</td><td class='num pred'>125</td><td class='num up'>+115</td></tr><tr><td class='name'>Kömür<span class='sub'>108 min played</span></td><td class='num'>16</td><td class='num pred'>128</td><td class='num up'>+112</td></tr>
+</table></div>
+
+<h2>Squad — predicted points, matchday 2</h2>
+<div class="tablewrap"><table class="data">
+<tr><td class='name'>Uzun<span class='sub'>MID · Eintracht Frankfurt · H FCA</span></td><td class='num'>28,78 M€</td><td class='num up' title='last 3 days +72k/day (+0.25%/day), 7 days before that +93k/day — rise reaches zero in about 17 days'>+595k<span class='sub warn'>topped out</span></td><td class='num pred' title='86 min expected — only 22 apps — shrunk toward baseline'>128 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Mittelstädt<span class='sub'>DEF · VfB Stuttgart · H KOE</span></td><td class='num'>26,35 M€</td><td class='num up' title='last 3 days +15k/day (+0.06%/day), 7 days before that -64k/day'>+164k<span class='sub '>flat</span></td><td class='num pred' title='79 min expected'>127</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
+<tr><td class='name'>Saibari<span class='sub'>FWD · FC Bayern München · A S04</span></td><td class='num'>30,12 M€</td><td class='num down' title='last 3 days +22k/day (+0.07%/day), 7 days before that -5k/day'>-149k<span class='sub '>flat</span></td><td class='num pred' title='57 min expected — only 1 apps — shrunk toward baseline'>108 *</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
+<tr><td class='name'>Guirassy<span class='sub'>FWD · Borussia Dortmund · A TSG</span></td><td class='num'>30,11 M€</td><td class='num up' title='last 3 days +74k/day (+0.24%/day), 7 days before that +83k/day'>+517k<span class='sub warn'>topped out</span></td><td class='num pred' title='79 min expected'>99</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
+<tr><td class='name'>Pejcinovic<span class='sub'>FWD · VfB Stuttgart · H KOE</span></td><td class='num'>9,92 M€</td><td class='num up' title='last 3 days +407k/day (+4.10%/day), 7 days before that +414k/day'>+2.930k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected — only 31 apps — shrunk toward baseline'>99 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Baum<span class='sub'>DEF · Eintracht Frankfurt · H FCA</span></td><td class='num'>12,14 M€</td><td class='num up' title='last 3 days +156k/day (+1.29%/day), 7 days before that +152k/day'>+1.055k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected — only 6 apps — shrunk toward baseline'>96 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Matsima<span class='sub'>DEF · FC Augsburg · A SGE</span></td><td class='num'>13,40 M€</td><td class='num up' title='last 3 days +129k/day (+0.96%/day), 7 days before that +172k/day — rise reaches zero in about 15 days'>+1.031k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>79</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Simpson-Pusey<span class='sub'>DEF · 1. FC Köln · A VFB</span></td><td class='num'>12,46 M€</td><td class='num up' title='last 3 days -58k/day (-0.47%/day), 7 days before that +114k/day'>+187k<span class='sub down'>falling</span></td><td class='num pred' title='86 min expected — only 12 apps — shrunk toward baseline'>65 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Philipp<span class='sub'>GK · TSG Hoffenheim · H BVB</span></td><td class='num'>0,50 M€</td><td class='num ' title='last 3 days +0k/day (+0.00%/day), 7 days before that +0k/day'>+0k<span class='sub '>flat</span></td><td class='num pred' title='6 min expected — Kickbase rates him unlikely to start; only 6 apps — shrunk toward baseline'>5 *</td><td class='status bench' title='Kickbase start rating: unlikely'>OUT</td></tr>
+<tr><td class='name'>Chiarodia<span class='sub'>DEF · Borussia Mönchengladbach · H ELV</span></td><td class='num'>2,67 M€</td><td class='num up' title='last 3 days +215k/day (+8.07%/day), 7 days before that +178k/day'>+1.814k<span class='sub up'>rising</span></td><td class='num pred' title='0 min expected — injured/suspended'>0</td><td class='status out' title=''>✚ Nicht im Kader</td></tr>
 </table></div>
 
 <h2>Market — best predicted points</h2>
 <div class="tablewrap"><table class="data">
-<tr><td class='name'>Kimmich<span class='sub'>MID · FC Bayern München · Kickbase</span></td><td class='num'>59,87 M€</td><td class='num up' title='last 3 days +12k/day (+0.02%/day), 7 days before that +22k/day — rise reaches zero in about 6 days'>+115k<span class='sub warn'>topped out</span></td><td class='num pred' title='86 min expected'>187</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Burger<span class='sub'>MID · TSG Hoffenheim · AlexG</span></td><td class='num'>24,29 M€</td><td class='num up' title='last 3 days +119k/day (+0.49%/day), 7 days before that +155k/day — rise reaches zero in about 17 days'>+936k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>104</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Moreira<span class='sub'>FWD · Bayer 04 Leverkusen · Kickbase</span></td><td class='num'>24,51 M€</td><td class='num up' title='last 3 days +194k/day (+0.79%/day), 7 days before that +215k/day'>+1.374k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected — no Bundesliga history — positional baseline'>98 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Stanišić<span class='sub'>DEF · FC Bayern München · Kickbase</span></td><td class='num'>22,22 M€</td><td class='num down' title='last 3 days -11k/day (-0.05%/day), 7 days before that -299k/day'>-1.229k<span class='sub '>flat</span></td><td class='num pred' title='57 min expected'>94</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
-<tr><td class='name'>Hajdari<span class='sub'>DEF · TSG Hoffenheim · Kickbase</span></td><td class='num'>19,05 M€</td><td class='num up' title='last 3 days +124k/day (+0.65%/day), 7 days before that +158k/day — rise reaches zero in about 18 days'>+959k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>92</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Hložek<span class='sub'>FWD · TSG Hoffenheim · Dan the Man</span></td><td class='num'>10,62 M€</td><td class='num up' title='last 3 days +178k/day (+1.65%/day), 7 days before that +315k/day — rise reaches zero in about 6 days'>+1.805k<span class='sub up'>rising</span></td><td class='num pred' title='79 min expected'>83</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
-<tr><td class='name'>Nicolas<span class='sub'>GK · Borussia Mönchengladbach · Kickbase</span></td><td class='num'>18,74 M€</td><td class='num down' title='last 3 days -141k/day (-0.75%/day), 7 days before that +32k/day'>-425k<span class='sub down'>falling</span></td><td class='num pred' title='86 min expected'>81</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Reis<span class='sub'>MID · SV Werder Bremen · Kickbase</span></td><td class='num'>6,60 M€</td><td class='num up' title='last 3 days +371k/day (+5.63%/day), 7 days before that -437k/day'>+2.356k<span class='sub up'>rebounding</span></td><td class='num pred' title='79 min expected'>75</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
-<tr><td class='name'>Noll<span class='sub'>GK · SC Paderborn 07 · AlexG</span></td><td class='num'>12,92 M€</td><td class='num up' title='last 3 days +63k/day (+0.49%/day), 7 days before that +83k/day — rise reaches zero in about 15 days'>+440k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>69</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Heuer Fernandes<span class='sub'>GK · Hamburger SV · Captain Luca</span></td><td class='num'>14,37 M€</td><td class='num up' title='last 3 days +103k/day (+0.68%/day), 7 days before that +140k/day — rise reaches zero in about 14 days'>+800k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected'>66</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Ulrich<span class='sub'>MID · SC Paderborn 07 · Kickbase</span></td><td class='num'>7,15 M€</td><td class='num up' title='last 3 days +274k/day (+3.83%/day), 7 days before that +832k/day — rise reaches zero in about 2 days'>+1.871k<span class='sub warn'>cooling</span></td><td class='num pred' title='86 min expected'>66</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
-<tr><td class='name'>Sambi Lokonga<span class='sub'>MID · Hamburger SV · Dan the Man</span></td><td class='num'>10,89 M€</td><td class='num up' title='last 3 days +21k/day (+0.19%/day), 7 days before that +40k/day — rise reaches zero in about 6 days'>+265k<span class='sub warn'>topped out</span></td><td class='num pred' title='86 min expected'>65</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Díaz<span class='sub'>FWD · FC Bayern München · Kickbase</span></td><td class='num'>53,67 M€</td><td class='num up' title='last 3 days +22k/day (+0.04%/day), 7 days before that +24k/day'>+154k<span class='sub warn'>topped out</span></td><td class='num pred' title='86 min expected'>211</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Tah<span class='sub'>DEF · FC Bayern München · Kickbase</span></td><td class='num'>35,93 M€</td><td class='num down' title='last 3 days -321k/day (-0.89%/day), 7 days before that -13k/day'>-1.099k<span class='sub down'>falling</span></td><td class='num pred' title='86 min expected'>137</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Mittelstädt<span class='sub'>DEF · VfB Stuttgart · Manager Anton </span></td><td class='num'>26,35 M€</td><td class='num up' title='last 3 days +15k/day (+0.06%/day), 7 days before that -64k/day'>+164k<span class='sub '>flat</span></td><td class='num pred' title='79 min expected'>127</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
+<tr><td class='name'>Gruda<span class='sub'>MID · RB Leipzig · Kickbase</span></td><td class='num'>20,97 M€</td><td class='num up' title='last 3 days +218k/day (+1.04%/day), 7 days before that +249k/day'>+1.621k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected — only 14 apps — shrunk toward baseline'>112 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Nusa<span class='sub'>MID · RB Leipzig · Kickbase</span></td><td class='num'>26,18 M€</td><td class='num up' title='last 3 days +64k/day (+0.25%/day), 7 days before that +62k/day'>+417k<span class='sub warn'>topped out</span></td><td class='num pred' title='86 min expected'>112</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Dahmen<span class='sub'>GK · FC Augsburg · Kickbase</span></td><td class='num'>16,11 M€</td><td class='num down' title='last 3 days -124k/day (-0.77%/day), 7 days before that +27k/day'>-321k<span class='sub down'>falling</span></td><td class='num pred' title='86 min expected'>81</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Bornauw<span class='sub'>DEF · Hamburger SV · Kickbase</span></td><td class='num'>11,02 M€</td><td class='num up' title='last 3 days -8k/day (-0.07%/day), 7 days before that +233k/day'>+752k<span class='sub warn'>topped out</span></td><td class='num pred' title='86 min expected — only 16 apps — shrunk toward baseline'>73 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Makengo<span class='sub'>DEF · SC Freiburg · Kickbase</span></td><td class='num'>6,61 M€</td><td class='num up' title='last 3 days +282k/day (+4.27%/day), 7 days before that +379k/day — rise reaches zero in about 15 days'>+2.301k<span class='sub up'>rising</span></td><td class='num pred' title='79 min expected — only 21 apps — shrunk toward baseline'>64 *</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
+<tr><td class='name'>Vidović<span class='sub'>MID · SC Paderborn 07 · Kickbase</span></td><td class='num'>7,30 M€</td><td class='num up' title='last 3 days +156k/day (+2.14%/day), 7 days before that +290k/day — rise reaches zero in about 6 days'>+1.677k<span class='sub up'>rising</span></td><td class='num pred' title='86 min expected — only 6 apps — shrunk toward baseline'>62 *</td><td class='status in' title='Kickbase start rating: nailed on'>XI</td></tr>
+<tr><td class='name'>Veerman<span class='sub'>MID · Borussia Dortmund · Kickbase</span></td><td class='num'>18,76 M€</td><td class='num up' title='last 3 days +71k/day (+0.38%/day), 7 days before that +146k/day — rise reaches zero in about 5 days'>+797k<span class='sub warn'>cooling</span></td><td class='num pred' title='57 min expected — only 1 apps — shrunk toward baseline'>60 *</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
+<tr><td class='name'>Rots<span class='sub'>DEF · TSG Hoffenheim · Niklas</span></td><td class='num'>8,98 M€</td><td class='num up' title='last 3 days +106k/day (+1.17%/day), 7 days before that +15k/day'>+731k<span class='sub up'>accelerating</span></td><td class='num pred' title='57 min expected — only 1 apps — shrunk toward baseline'>50 *</td><td class='status ' title='Kickbase start rating: uncertain'>?</td></tr>
+<tr><td class='name'>Ljubicic<span class='sub'>FWD · 1. FC Union Berlin · Captain Luca</span></td><td class='num'>4,81 M€</td><td class='num up' title='last 3 days +344k/day (+7.14%/day), 7 days before that +172k/day'>+2.236k<span class='sub up'>accelerating</span></td><td class='num pred' title='79 min expected — only 13 apps — shrunk toward baseline'>44 *</td><td class='status in' title='Kickbase start rating: very likely'>XI</td></tr>
 </table></div>
 
 <footer>Predicted points = player's own per-90 scoring rate projected onto this fixture's

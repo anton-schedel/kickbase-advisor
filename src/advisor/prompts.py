@@ -43,8 +43,18 @@ looks mediocre — that is missing data, not evidence of a weak player.
 - Market values update daily around 22:00. Community demand is strongest early in the week \
 after a matchday and flattens toward Friday.
 
+Anything shown to you under "Already decided" is the conclusion of an earlier pass over this \
+same briefing. Treat it as settled and build on it — my dashboard publishes all the passes \
+together, so two of them quietly recommending different things is worse than either one being \
+wrong. If an earlier conclusion is genuinely mistaken, or your part of the problem makes it \
+impossible, say so explicitly and give the reason. Never contradict one silently.
+
 Be concrete and decisive, answer in English, and flag data that looks unreliable instead of \
-guessing around it."""
+guessing around it.
+
+Start with the answer. Do not open by restating the section title, describing what kind of \
+task this is, or narrating how you are going to approach it — your reply is published \
+directly on my dashboard, so the first line should already be advice."""
 
 
 DEADLINE_RULE = """- **Budget deadline**: the budget must be ≥ 0 exactly at the first kickoff of the matchday \
@@ -128,6 +138,12 @@ SQUAD_RULES = f"""Decide, for every player I own, whether to sell or hold — an
 
 {UPSIDE_RULE}
 
+- **Time every sale against the real market, not in the abstract.** The transfer market is \
+included so you can see what a sale would fund and when that window closes. A bid reserves \
+cash when it is placed, so an auction expiring tonight can make a sale that "should" wait \
+until Friday need to happen now — and a sale funding nothing worth buying should simply take \
+the latest good price. Name the listing that drives the timing whenever it does. You are not \
+choosing the buys here; the next pass does that. You are making sure your timing is possible.
 - Holding is an active decision, not a default. For each player ask what he is doing for me: \
 points this weekend, value growth, or squad depth. If he is doing none of the three, say so.
 - A player not in his club's real starting XI earns few or no points, however good he is.
@@ -273,14 +289,27 @@ be the only way to fund a buy, or a buy target may make a squad player redundant
 and list every change you make to a stage's verdict with the reason.
 - Do not restate the tables from the earlier stages; they are published alongside your plan."""
 
-PLAN_OUTPUT = """Output:
+PLAN_OUTPUT = """Your answer is the one that gets published as the decision. The three earlier \
+passes are shown beside it only as workings, so yours has to stand on its own: someone reading \
+just your section must know every action to take without consulting them.
 
-**A. This week's plan** — a short day-by-day timeline from today to the deadline: what to buy \
-when, what to sell when, which auctions expire in between.
-**B. Budget math** — the arithmetic proving the budget is ≥ 0 at kickoff.
-**C. Changes to the stage verdicts** — every override, with the reason. Write "none" if there \
-are none.
-**D. The one thing that matters most this week** — a single sentence."""
+Output:
+
+**A. Decisions** — one table covering every player involved, so there is a single place to look:
+
+| Player | Action | When | Price | Why (one line) |
+
+Action is SELL, BUY, BID, HOLD or FIELD. Include every player you are selling or buying, every \
+holding whose verdict changed, and the eleven you are fielding. State prices in €, and for a \
+bid give the walk-away too. This table overrides anything an earlier pass said.
+
+**B. This week's plan** — a short day-by-day timeline from now to the deadline, including which \
+auctions expire in between and what happens if a bid loses.
+**C. Budget math** — the arithmetic proving the budget is ≥ 0 at kickoff, and never negative at \
+the moment any bid is placed.
+**D. What I overrode** — every place you departed from an earlier pass, with the reason, so the \
+disagreement is visible rather than silent. Write "nothing" if there are none.
+**E. The one thing that matters most this week** — a single sentence."""
 
 
 @dataclass
@@ -298,7 +327,9 @@ STAGES = [
     Stage(
         key="squad",
         title="Sell / Hold",
-        sections=["time", "me", "squad", "curves", "upside", "my_xi", "model"],
+        # The market is here as context, not as this pass's job: sell timing is
+        # meaningless without knowing what is buyable and when it expires.
+        sections=["time", "me", "squad", "market", "curves", "upside", "my_xi", "model"],
         rules=SQUAD_RULES,
         output=SQUAD_OUTPUT,
     ),
